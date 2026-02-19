@@ -1,0 +1,72 @@
+# =============================================
+#       DynamicEconomy - Main Configuration
+#       Author: n1xend | Version: 1.0.0
+# =============================================
+
+# Активный язык (ru / en)
+language: ru
+
+# Настройки экономики
+economy:
+  # Минимальный порог цены от базовой (0.2 = 20%)
+  min-price-multiplier: 0.2
+  # Максимальный порог (1.0 = 100%, выше базы только через сезонный бонус)
+  max-price-multiplier: 1.0
+  # Падение мультипликатора за каждые 64 единицы проданного товара
+  price-drop-per-stack: 0.02
+  # Восстановление мультипликатора в час реального времени
+  price-recovery-per-hour: 0.05
+  # Налог на продажу (0.05 = 5%)
+  sell-tax: 0.05
+  # Кулдаун между продажами игрока в секундах
+  sell-cooldown-seconds: 3
+  # Максимальный объём одной продажи (единицы)
+  max-sell-amount: 2304
+
+# Сезонный спрос — одна категория становится "горячей"
+seasonal-demand:
+  enabled: true
+  # Интервал смены горячей категории (минуты реального времени)
+  change-interval-minutes: 1440
+  # Ценовой бонус горячей категории (1.5 = +50%)
+  hot-multiplier: 1.5
+
+# Контракты — крупные заказы с бонусом к цене
+contracts:
+  enabled: true
+  max-active: 3
+  # Интервал появления нового контракта (минуты)
+  spawn-interval-minutes: 60
+  # Бонус к цене при активном контракте (0.4 = +40%)
+  bonus-multiplier: 0.4
+  # Время выполнения контракта (минуты)
+  duration-minutes: 180
+  # Минимальный объём заказа
+  amount-min: 200
+  # Максимальный объём заказа
+  amount-max: 800
+
+# Бонус за разнообразие продаж
+diversity-bonus:
+  enabled: true
+  # Минимум категорий для активации бонуса
+  min-categories: 3
+  # Окно отслеживания (минуты)
+  window-minutes: 30
+  # Бонус к цене (0.1 = +10%)
+  bonus-multiplier: 0.1
+
+# GUI настройки
+gui:
+  # Материал заполнителя границ
+  filler-material: BLACK_STAINED_GLASS_PANE
+  # Материал пустых слотов
+  empty-material: GRAY_STAINED_GLASS_PANE
+
+# Автосохранение данных (минуты)
+data:
+  auto-save-interval-minutes: 5
+
+# Логирование
+logging:
+  log-sales: false

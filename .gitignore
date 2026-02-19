@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# VS Code
+.vscode/
+
+# Compiled output
+*.class
+*.jar
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Plugin data (generated at runtime)
+src/main/resources/market_data.json
+run/

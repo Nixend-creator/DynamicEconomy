@@ -1,0 +1,236 @@
+# =============================================
+#       DynamicEconomy - Items Configuration
+# =============================================
+# base-price: базовая цена в Vault-валюте
+# Слот в главном GUI (0-53)
+
+categories:
+  farming:
+    display-name: "&a🌾 Фермерство"
+    description: "&7Урожай и фермерские продукты"
+    icon: WHEAT
+    slot: 10
+    items:
+      WHEAT:
+        display-name: "&eПшеница"
+        base-price: 2.0
+      CARROT:
+        display-name: "&6Морковь"
+        base-price: 2.5
+      POTATO:
+        display-name: "&eКартофель"
+        base-price: 2.0
+      BEETROOT:
+        display-name: "&cСвёкла"
+        base-price: 3.0
+      SUGAR_CANE:
+        display-name: "&aСахарный тростник"
+        base-price: 1.5
+      PUMPKIN:
+        display-name: "&6Тыква"
+        base-price: 5.0
+      MELON_SLICE:
+        display-name: "&aДолька дыни"
+        base-price: 1.0
+      CACTUS:
+        display-name: "&2Кактус"
+        base-price: 2.0
+      BAMBOO:
+        display-name: "&aБамбук"
+        base-price: 1.0
+      NETHER_WART:
+        display-name: "&cАдский нарост"
+        base-price: 8.0
+      COCOA_BEANS:
+        display-name: "&6Какао-бобы"
+        base-price: 4.0
+      KELP:
+        display-name: "&2Ламинария"
+        base-price: 0.5
+      DRIED_KELP:
+        display-name: "&2Сушёная ламинария"
+        base-price: 0.8
+
+  livestock:
+    display-name: "&6🐄 Скотоводство"
+    description: "&7Продукты животноводства"
+    icon: BEEF
+    slot: 12
+    items:
+      BEEF:
+        display-name: "&cГовядина"
+        base-price: 6.0
+      COOKED_BEEF:
+        display-name: "&6Стейк"
+        base-price: 10.0
+      PORKCHOP:
+        display-name: "&fОтбивная"
+        base-price: 5.0
+      COOKED_PORKCHOP:
+        display-name: "&6Жареная отбивная"
+        base-price: 8.0
+      CHICKEN:
+        display-name: "&eКурица"
+        base-price: 4.0
+      COOKED_CHICKEN:
+        display-name: "&6Жареная курица"
+        base-price: 7.0
+      MUTTON:
+        display-name: "&fБаранина"
+        base-price: 5.0
+      LEATHER:
+        display-name: "&6Кожа"
+        base-price: 8.0
+      WHITE_WOOL:
+        display-name: "&fШерсть"
+        base-price: 3.0
+      FEATHER:
+        display-name: "&fПеро"
+        base-price: 2.0
+      EGG:
+        display-name: "&eЯйцо"
+        base-price: 1.5
+      RABBIT_HIDE:
+        display-name: "&6Шкура кролика"
+        base-price: 3.0
+      HONEY_BOTTLE:
+        display-name: "&eМёд"
+        base-price: 12.0
+      HONEYCOMB:
+        display-name: "&6Соты"
+        base-price: 10.0
+
+  resources:
+    display-name: "&7⛏ Ресурсы"
+    description: "&7Руды, камень и минералы"
+    icon: IRON_INGOT
+    slot: 14
+    items:
+      COAL:
+        display-name: "&8Уголь"
+        base-price: 3.0
+      IRON_INGOT:
+        display-name: "&7Железный слиток"
+        base-price: 15.0
+      GOLD_INGOT:
+        display-name: "&6Золотой слиток"
+        base-price: 25.0
+      DIAMOND:
+        display-name: "&bАлмаз"
+        base-price: 150.0
+      EMERALD:
+        display-name: "&aИзумруд"
+        base-price: 200.0
+      LAPIS_LAZULI:
+        display-name: "&9Лазурит"
+        base-price: 8.0
+      REDSTONE:
+        display-name: "&cКрасная пыль"
+        base-price: 5.0
+      QUARTZ:
+        display-name: "&fКварц"
+        base-price: 4.0
+      COPPER_INGOT:
+        display-name: "&6Медный слиток"
+        base-price: 8.0
+      AMETHYST_SHARD:
+        display-name: "&dОсколок аметиста"
+        base-price: 12.0
+      NETHERITE_SCRAP:
+        display-name: "&8Обломок незерита"
+        base-price: 500.0
+      GLOWSTONE_DUST:
+        display-name: "&eСветопыль"
+        base-price: 6.0
+      RAW_IRON:
+        display-name: "&7Сырое железо"
+        base-price: 10.0
+      RAW_GOLD:
+        display-name: "&6Сырое золото"
+        base-price: 18.0
+      RAW_COPPER:
+        display-name: "&6Сырая медь"
+        base-price: 5.0
+
+  rare:
+    display-name: "&d✨ Редкости"
+    description: "&7Редкие и особые дропы"
+    icon: ENDER_PEARL
+    slot: 16
+    items:
+      ENDER_PEARL:
+        display-name: "&5Жемчуг Эндера"
+        base-price: 30.0
+      BLAZE_ROD:
+        display-name: "&6Стержень Слизня"
+        base-price: 25.0
+      GHAST_TEAR:
+        display-name: "&fСлеза Гаста"
+        base-price: 80.0
+      SLIME_BALL:
+        display-name: "&aКусок слизи"
+        base-price: 15.0
+      MAGMA_CREAM:
+        display-name: "&6Магмовый крем"
+        base-price: 20.0
+      SPIDER_EYE:
+        display-name: "&cГлаз паука"
+        base-price: 10.0
+      STRING:
+        display-name: "&fПаутина"
+        base-price: 5.0
+      BONE:
+        display-name: "&fКость"
+        base-price: 4.0
+      GUNPOWDER:
+        display-name: "&8Порох"
+        base-price: 12.0
+      PHANTOM_MEMBRANE:
+        display-name: "&5Плёнка Фантома"
+        base-price: 60.0
+      NAUTILUS_SHELL:
+        display-name: "&bРаковина"
+        base-price: 100.0
+      TURTLE_SCUTE:
+        display-name: "&aЧешуя черепахи"
+        base-price: 40.0
+      SHULKER_SHELL:
+        display-name: "&5Панцирь Шалкера"
+        base-price: 150.0
+
+  wood:
+    display-name: "&2🪵 Дерево"
+    description: "&7Брёвна и древесные материалы"
+    icon: OAK_LOG
+    slot: 20
+    items:
+      OAK_LOG:
+        display-name: "&6Дуб"
+        base-price: 2.0
+      BIRCH_LOG:
+        display-name: "&eБерёза"
+        base-price: 2.0
+      SPRUCE_LOG:
+        display-name: "&8Ель"
+        base-price: 2.0
+      JUNGLE_LOG:
+        display-name: "&aДжунгли"
+        base-price: 3.0
+      DARK_OAK_LOG:
+        display-name: "&8Тёмный дуб"
+        base-price: 2.5
+      ACACIA_LOG:
+        display-name: "&6Акация"
+        base-price: 2.5
+      CHERRY_LOG:
+        display-name: "&dВишня"
+        base-price: 4.0
+      MANGROVE_LOG:
+        display-name: "&4Мангровое"
+        base-price: 3.0
+      RED_MUSHROOM:
+        display-name: "&cКрасный гриб"
+        base-price: 5.0
+      BROWN_MUSHROOM:
+        display-name: "&6Коричневый гриб"
+        base-price: 5.0

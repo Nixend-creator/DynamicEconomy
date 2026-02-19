@@ -1,0 +1,80 @@
+# =============================================
+#       DynamicEconomy - Messages (EN)
+# =============================================
+
+prefix: "&8[&6Market&8] &r"
+
+sell:
+  success: "&aSold &f%amount%x %item% &afor &6%payout%&a."
+  price-now: "&7Price is now &f%percent%% &7of base."
+  cooldown: "&cPlease wait before selling again."
+  no-items: "&cYou have no &e%item% &cto sell."
+  unknown-item: "&cThis item is not accepted in the shop."
+  bonus-diversity: "&7(+%bonus%% diversity bonus)"
+  bonus-contract: "&a(+%bonus%% contract)"
+
+gui:
+  main-title: "&6&lDynamic Market"
+  category-title: "&6&l%category%"
+  confirm-title: "&6Sell: %amount%x %item%"
+  back-button: "&cBack"
+  next-page: "&aNext page"
+  prev-page: "&aPrev page"
+  no-contracts: "&7No active contracts"
+  click-hint: "&eLMB → Sell all &7| &eRMB → 1 stack &7| &eShift → 1 item"
+  item-lore:
+    base-price: "&7Base price: &f%price%"
+    current-price: "&7Current: %color%%price% &7each (after tax)"
+    price-level: "&7Price level:"
+    trend: "&7Trend: %arrow% %color%%percent%%"
+    total-sold: "&7Total sold: &f%amount%"
+    hot-bonus: "&6🔥 Hot! +%bonus%% bonus"
+    contract-bonus: "&a📦 Contract! +%bonus%% bonus"
+  confirm:
+    selling: "&7Selling: &f%amount%x %item%"
+    per-unit: "&7Per unit: &f%price%"
+    tax: "&7Tax (%tax%%): &c-%amount%"
+    payout: "&7You will receive: &a%payout%"
+    impact-before: "&7Before: %color%%percent%%"
+    impact-after: "&7After: %color%%percent%%"
+    confirm-button: "&a✔ Confirm"
+    cancel-button: "&c✗ Cancel"
+
+seasonal:
+  rotation: "&eSeasonal shift! &6%category% &eis now 🔥 HOT (x%multiplier%)!"
+
+contracts:
+  new: "&aNew contract! Deliver &e%amount%x %item% &awithin &e%time% min &afor +%bonus%% price!"
+  expired: "&cContract expired: &7%item%"
+  completed: "&6✔ Contract fulfilled: &e%item% &7— thanks to all contributors!"
+  board-title: "&6📦 Active Contracts"
+  lore:
+    deliver: "&7Deliver: &f%amount%x %item%"
+    progress: "&7Progress: &e%done%/%total% &7(%percent%%)"
+    time-left: "&7Time left: &e%minutes% min"
+    bonus: "&aBonus: &6+%bonus%% sell price"
+    hint: "&7Sell the item in its category"
+
+admin:
+  reloaded: "&aConfig and data reloaded."
+  reset-all: "&aAll prices reset to base."
+  reset-item: "&aPrice of &f%item% &ahas been reset."
+  item-not-found: "&cItem not found: &f%item%"
+  price-set: "&aMultiplier for &f%item% &aset to &f%value%."
+  invalid-number: "&cInvalid number: &f%value%"
+  no-permission: "&cYou don't have permission."
+  help:
+    header: "&6--- DynamicEconomy Commands ---"
+    reload: "  &e/shopadmin reload &7— reload config"
+    reset: "  &e/shopadmin reset <item|all> &7— reset price"
+    setprice: "  &e/shopadmin setprice <item> <mult> &7— set multiplier"
+    info: "  &e/shopadmin info &7— show current prices"
+  info:
+    header: "&6--- Current Prices ---"
+    category-line: "&e%category%:"
+    item-line: "  &7%id%: &f%percent%% &8(%price%)"
+    contracts: "&6Active contracts: &f%count%"
+
+error:
+  players-only: "&cThis command is for players only."
+  no-permission: "&cYou don't have permission to do that."

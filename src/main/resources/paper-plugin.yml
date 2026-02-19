@@ -1,0 +1,37 @@
+name: DynamicEconomy
+version: '${version}'
+main: dev.n1xend.dynamiceconomy.DynamicEconomy
+description: '${description}'
+api-version: '1.21'
+author: '${author}'
+
+dependencies:
+  server:
+    Vault:
+      load: BEFORE
+      required: true
+      join-classpath: false
+
+commands:
+  shop:
+    description: Open the dynamic market
+    usage: /shop
+    aliases:
+      - market
+      - store
+    permission: dynamiceconomy.shop
+  shopadmin:
+    description: Admin commands for DynamicEconomy
+    usage: /shopadmin <reload|reset <item|all>|setprice <item> <mult>|info>
+    permission: dynamiceconomy.admin
+
+permissions:
+  dynamiceconomy.shop:
+    description: Access to the market shop
+    default: true
+  dynamiceconomy.admin:
+    description: Admin access
+    default: op
+  dynamiceconomy.bypass.cooldown:
+    description: Bypass sell cooldown
+    default: op
