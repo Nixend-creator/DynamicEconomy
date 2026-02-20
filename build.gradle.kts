@@ -1,7 +1,3 @@
-val Unit.FIRST: Any
-val Unit.FIRST: DuplicatesStrategy
-val Unit.FIRST: DuplicatesStrategy
-
 plugins {
     java
     id("xyz.jpenilla.run-paper") version "2.3.1"
@@ -32,31 +28,32 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.8.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
     testImplementation("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+
+    // Gradle 9 требует явного указания launcher
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.1")
 }
 
-// Fat JAR — собираем все implementation-зависимости прямо в плагинный JAR
-// Без Shadow Plugin, совместимо с Gradle 9+
+// Fat JAR — Gson bundled, совместимо с Gradle 9+
 tasks.jar {
     archiveFileName.set("${project.name}-${project.version}.jar")
+    isZip64 = true
 
     from({
         configurations.runtimeClasspath.get()
             .filter { it.name.endsWith(".jar") }
             .map { zipTree(it) }
-    }) {
-        // Убираем подписи и лицензии из сторонних JAR
-        exclude(
-            "META-INF/*.SF",
-            "META-INF/*.DSA",
-            "META-INF/*.RSA",
-            "META-INF/LICENSE*",
-            "META-INF/NOTICE*",
-            "META-INF/MANIFEST.MF"
-        )
-        duplicatesStrategy = DuplicatesStrategy.FIRST
-    }
+    })
 
-    DuplicatesStrategy.FIRST.also { duplicatesStrategy = it }
+    exclude(
+        "META-INF/*.SF",
+        "META-INF/*.DSA",
+        "META-INF/*.RSA",
+        "META-INF/LICENSE*",
+        "META-INF/NOTICE*",
+        "META-INF/MANIFEST.MF",
+        "module-info.class",
+        "META-INF/versions/**"
+    )
 }
 
 tasks.processResources {

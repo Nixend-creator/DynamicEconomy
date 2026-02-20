@@ -10,20 +10,7 @@ dependencies:
     Vault:
       load: BEFORE
       required: true
-      join-classpath: false
-
-commands:
-  shop:
-    description: Open the dynamic market
-    usage: /shop
-    aliases:
-      - market
-      - store
-    permission: dynamiceconomy.shop
-  shopadmin:
-    description: Admin commands for DynamicEconomy
-    usage: /shopadmin <reload|reset <item|all>|setprice <item> <mult>|info>
-    permission: dynamiceconomy.admin
+      join-classpath: true
 
 permissions:
   dynamiceconomy.shop:
