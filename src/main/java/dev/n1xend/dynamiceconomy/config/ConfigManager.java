@@ -161,4 +161,67 @@ public class ConfigManager {
     private FileConfiguration getConfig() {
         return plugin.getConfig();
     }
+
+    // ── Buy mode (1.2.0) ──────────────────────────────────────────────────────
+
+    public boolean isBuyModeEnabled() {
+        return getConfig().getBoolean("buy-mode.enabled", true);
+    }
+
+    public double getBuySpreadMultiplier() {
+        return getConfig().getDouble("buy-mode.spread-multiplier", 1.3);
+    }
+
+    public double getBuyTreasuryCut() {
+        return getConfig().getDouble("buy-mode.treasury-cut", 0.10);
+    }
+
+    // ── Market events (1.2.0) ─────────────────────────────────────────────────
+
+    public boolean isMarketEventsEnabled() {
+        return getConfig().getBoolean("market-events.enabled", true);
+    }
+
+    public int getEventMinIntervalMinutes() {
+        return getConfig().getInt("market-events.min-interval-minutes", 20);
+    }
+
+    public int getEventMaxIntervalMinutes() {
+        return getConfig().getInt("market-events.max-interval-minutes", 60);
+    }
+
+    public int getEventDurationMinutes() {
+        return getConfig().getInt("market-events.duration-minutes", 30);
+    }
+
+    // ── Licenses (1.2.0) ──────────────────────────────────────────────────────
+
+    public boolean isLicensesEnabled() {
+        return getConfig().getBoolean("licenses.enabled", true);
+    }
+
+    public long getMerchantThreshold() {
+        return getConfig().getLong("licenses.merchant-threshold", 10_000L);
+    }
+
+    public long getTycoonThreshold() {
+        return getConfig().getLong("licenses.tycoon-threshold", 50_000L);
+    }
+
+    // ── History (1.2.0) ───────────────────────────────────────────────────────
+
+    public int getHistorySnapshotIntervalMinutes() {
+        return getConfig().getInt("history.snapshot-interval-minutes", 15);
+    }
+
+    // ── Logging extras (1.2.0) ────────────────────────────────────────────────
+
+    public boolean isLogBuys() {
+        return getConfig().getBoolean("logging.log-buys", false);
+    }
+
+    public boolean isLogEvents() {
+        return getConfig().getBoolean("logging.log-events", true);
+    }
+
 }

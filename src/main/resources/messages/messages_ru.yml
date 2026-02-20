@@ -23,7 +23,7 @@ gui:
   next-page: "&aСлед. страница"
   prev-page: "&aПред. страница"
   no-contracts: "&7Нет активных контрактов"
-  click-hint: "&eЛКМ → Продать всё &7| &eПКМ → 1 стак &7| &eShift → 1 шт"
+  click-hint: "&eЛКМ → Продать всё &7| &ePKМ → Купить &7| &eShift → Продать 1 шт"
   item-lore:
     base-price: "&7Базовая цена: &f%price%"
     current-price: "&7Текущая: %color%%price% &7за шт (после налога)"

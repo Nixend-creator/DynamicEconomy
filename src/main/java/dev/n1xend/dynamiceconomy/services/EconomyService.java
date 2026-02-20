@@ -340,4 +340,15 @@ public class EconomyService {
     public String getHotCategoryId() {
         return hotCategoryId;
     }
+    // ── Added in 1.2.0 ────────────────────────────────────────────────────────
+
+    /** Finds a MarketItem by Bukkit Material. Used by GuiListener. */
+    @org.jetbrains.annotations.Nullable
+    public MarketItem getItemByMaterial(@org.jetbrains.annotations.NotNull org.bukkit.Material material) {
+        for (MarketItem item : itemIndex.values()) {
+            if (item.getMaterial() == material) return item;
+        }
+        return null;
+    }
+
 }

@@ -21,7 +21,7 @@ gui:
   next-page: "&aNext page"
   prev-page: "&aPrev page"
   no-contracts: "&7No active contracts"
-  click-hint: "&eLMB → Sell all &7| &eRMB → 1 stack &7| &eShift → 1 item"
+  click-hint: "&eLMB → Sell all &7| &eRMB → Buy &7| &eShift → Sell 1"
   item-lore:
     base-price: "&7Base price: &f%price%"
     current-price: "&7Current: %color%%price% &7each (after tax)"

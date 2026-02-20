@@ -11,14 +11,32 @@ dependencies:
       load: BEFORE
       required: true
       join-classpath: true
+    PlaceholderAPI:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    WorldGuard:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    WorldEdit:
+      load: BEFORE
+      required: false
+      join-classpath: true
 
 permissions:
   dynamiceconomy.shop:
     description: Access to the market shop
     default: true
   dynamiceconomy.admin:
-    description: Admin access
+    description: Admin access to /shopadmin
     default: op
   dynamiceconomy.bypass.cooldown:
     description: Bypass sell cooldown
     default: op
+  dynamiceconomy.auction:
+    description: Access to the auction house
+    default: true
+  dynamiceconomy.license.view:
+    description: View own trade license
+    default: true

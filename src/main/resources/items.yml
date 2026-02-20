@@ -1,15 +1,22 @@
 # =============================================
 #       DynamicEconomy - Items Configuration
+#       Version: 1.1.0
 # =============================================
+# enabled: false — полностью скрывает категорию из GUI
 # base-price: базовая цена в Vault-валюте
-# Слот в главном GUI (0-53)
+# slot: слот в главном GUI (0-53)
+
+config-version: 2
 
 categories:
+
+  # ─── ФЕРМЕРСТВО ───────────────────────────
   farming:
     display-name: "&a🌾 Фермерство"
     description: "&7Урожай и фермерские продукты"
     icon: WHEAT
     slot: 10
+    enabled: true
     items:
       WHEAT:
         display-name: "&eПшеница"
@@ -50,12 +57,59 @@ categories:
       DRIED_KELP:
         display-name: "&2Сушёная ламинария"
         base-price: 0.8
+      WHEAT_SEEDS:
+        display-name: "&eСемена пшеницы"
+        base-price: 0.5
+      PUMPKIN_SEEDS:
+        display-name: "&6Семена тыквы"
+        base-price: 1.0
+      MELON_SEEDS:
+        display-name: "&aСемена дыни"
+        base-price: 1.0
+      BEETROOT_SEEDS:
+        display-name: "&cСемена свёклы"
+        base-price: 0.8
+      TORCHFLOWER_SEEDS:
+        display-name: "&6Семена горелоцвета"
+        base-price: 15.0
+      PITCHER_POD:
+        display-name: "&dСтручок кувшинки"
+        base-price: 20.0
+      SWEET_BERRIES:
+        display-name: "&cСладкие ягоды"
+        base-price: 3.0
+      GLOW_BERRIES:
+        display-name: "&6Светящиеся ягоды"
+        base-price: 5.0
+      BROWN_MUSHROOM:
+        display-name: "&6Коричневый гриб"
+        base-price: 5.0
+      RED_MUSHROOM:
+        display-name: "&cКрасный гриб"
+        base-price: 5.0
+      LILY_PAD:
+        display-name: "&aЛист кувшинки"
+        base-price: 1.5
+      SEA_PICKLE:
+        display-name: "&2Морской огурец"
+        base-price: 4.0
+      CHORUS_FRUIT:
+        display-name: "&5Плод хоруса"
+        base-price: 12.0
+      APPLE:
+        display-name: "&aЯблоко"
+        base-price: 3.0
+      GOLDEN_APPLE:
+        display-name: "&6Золотое яблоко"
+        base-price: 80.0
 
+  # ─── СКОТОВОДСТВО ─────────────────────────
   livestock:
     display-name: "&6🐄 Скотоводство"
     description: "&7Продукты животноводства"
     icon: BEEF
     slot: 12
+    enabled: true
     items:
       BEEF:
         display-name: "&cГовядина"
@@ -78,6 +132,33 @@ categories:
       MUTTON:
         display-name: "&fБаранина"
         base-price: 5.0
+      COOKED_MUTTON:
+        display-name: "&6Жареная баранина"
+        base-price: 8.0
+      RABBIT:
+        display-name: "&6Кролик"
+        base-price: 4.0
+      COOKED_RABBIT:
+        display-name: "&6Жареный кролик"
+        base-price: 7.0
+      COD:
+        display-name: "&fТреска"
+        base-price: 3.0
+      COOKED_COD:
+        display-name: "&6Жареная треска"
+        base-price: 5.0
+      SALMON:
+        display-name: "&cЛосось"
+        base-price: 4.0
+      COOKED_SALMON:
+        display-name: "&6Жареный лосось"
+        base-price: 7.0
+      TROPICAL_FISH:
+        display-name: "&bТропическая рыба"
+        base-price: 8.0
+      PUFFERFISH:
+        display-name: "&eРыба-шар"
+        base-price: 10.0
       LEATHER:
         display-name: "&6Кожа"
         base-price: 8.0
@@ -93,28 +174,66 @@ categories:
       RABBIT_HIDE:
         display-name: "&6Шкура кролика"
         base-price: 3.0
+      RABBIT_FOOT:
+        display-name: "&fЛапка кролика"
+        base-price: 25.0
       HONEY_BOTTLE:
         display-name: "&eМёд"
         base-price: 12.0
       HONEYCOMB:
         display-name: "&6Соты"
         base-price: 10.0
+      INK_SAC:
+        display-name: "&8Чернильный мешок"
+        base-price: 5.0
+      GLOW_INK_SAC:
+        display-name: "&bСветящийся чернильный мешок"
+        base-price: 20.0
+      TURTLE_SCUTE:
+        display-name: "&aЧешуя черепахи"
+        base-price: 40.0
+      ARMADILLO_SCUTE:
+        display-name: "&6Чешуя броненосца"
+        base-price: 35.0
 
+  # ─── РУДЫ И РЕСУРСЫ ───────────────────────
   resources:
     display-name: "&7⛏ Ресурсы"
     description: "&7Руды, камень и минералы"
     icon: IRON_INGOT
     slot: 14
+    enabled: true
     items:
       COAL:
         display-name: "&8Уголь"
         base-price: 3.0
+      CHARCOAL:
+        display-name: "&8Древесный уголь"
+        base-price: 2.5
+      RAW_IRON:
+        display-name: "&7Сырое железо"
+        base-price: 10.0
       IRON_INGOT:
         display-name: "&7Железный слиток"
         base-price: 15.0
+      RAW_COPPER:
+        display-name: "&6Сырая медь"
+        base-price: 5.0
+      COPPER_INGOT:
+        display-name: "&6Медный слиток"
+        base-price: 8.0
+      RAW_GOLD:
+        display-name: "&6Сырое золото"
+        base-price: 18.0
       GOLD_INGOT:
         display-name: "&6Золотой слиток"
         base-price: 25.0
+      GOLD_NUGGET:
+        display-name: "&eЗолотой самородок"
+        base-price: 3.0
+      IRON_NUGGET:
+        display-name: "&7Железный самородок"
+        base-price: 1.8
       DIAMOND:
         display-name: "&bАлмаз"
         base-price: 150.0
@@ -130,9 +249,6 @@ categories:
       QUARTZ:
         display-name: "&fКварц"
         base-price: 4.0
-      COPPER_INGOT:
-        display-name: "&6Медный слиток"
-        base-price: 8.0
       AMETHYST_SHARD:
         display-name: "&dОсколок аметиста"
         base-price: 12.0
@@ -142,28 +258,51 @@ categories:
       GLOWSTONE_DUST:
         display-name: "&eСветопыль"
         base-price: 6.0
-      RAW_IRON:
-        display-name: "&7Сырое железо"
-        base-price: 10.0
-      RAW_GOLD:
-        display-name: "&6Сырое золото"
-        base-price: 18.0
-      RAW_COPPER:
-        display-name: "&6Сырая медь"
-        base-price: 5.0
+      FLINT:
+        display-name: "&8Кремень"
+        base-price: 2.0
+      GRAVEL:
+        display-name: "&8Гравий"
+        base-price: 0.5
+      CLAY_BALL:
+        display-name: "&9Комок глины"
+        base-price: 2.0
+      BRICK:
+        display-name: "&6Кирпич"
+        base-price: 3.0
+      NETHER_BRICK:
+        display-name: "&8Незерный кирпич"
+        base-price: 4.0
+      OBSIDIAN:
+        display-name: "&5Обсидиан"
+        base-price: 20.0
+      CRYING_OBSIDIAN:
+        display-name: "&5Плачущий обсидиан"
+        base-price: 35.0
+      ANCIENT_DEBRIS:
+        display-name: "&8Древние обломки"
+        base-price: 1500.0
+      ECHO_SHARD:
+        display-name: "&3Осколок эха"
+        base-price: 300.0
 
+  # ─── РЕДКОСТИ ─────────────────────────────
   rare:
     display-name: "&d✨ Редкости"
     description: "&7Редкие и особые дропы"
     icon: ENDER_PEARL
     slot: 16
+    enabled: true
     items:
       ENDER_PEARL:
         display-name: "&5Жемчуг Эндера"
         base-price: 30.0
       BLAZE_ROD:
-        display-name: "&6Стержень Слизня"
+        display-name: "&6Стержень огненного"
         base-price: 25.0
+      BLAZE_POWDER:
+        display-name: "&6Порошок огненного"
+        base-price: 12.0
       GHAST_TEAR:
         display-name: "&fСлеза Гаста"
         base-price: 80.0
@@ -176,12 +315,18 @@ categories:
       SPIDER_EYE:
         display-name: "&cГлаз паука"
         base-price: 10.0
+      FERMENTED_SPIDER_EYE:
+        display-name: "&8Ферментированный глаз"
+        base-price: 18.0
       STRING:
         display-name: "&fПаутина"
         base-price: 5.0
       BONE:
         display-name: "&fКость"
         base-price: 4.0
+      BONE_MEAL:
+        display-name: "&fКостная мука"
+        base-price: 2.0
       GUNPOWDER:
         display-name: "&8Порох"
         base-price: 12.0
@@ -189,20 +334,58 @@ categories:
         display-name: "&5Плёнка Фантома"
         base-price: 60.0
       NAUTILUS_SHELL:
-        display-name: "&bРаковина"
+        display-name: "&bРаковина Наутилуса"
         base-price: 100.0
-      TURTLE_SCUTE:
-        display-name: "&aЧешуя черепахи"
-        base-price: 40.0
       SHULKER_SHELL:
         display-name: "&5Панцирь Шалкера"
         base-price: 150.0
+      DRAGON_BREATH:
+        display-name: "&5Дыхание Дракона"
+        base-price: 400.0
+      WITHER_ROSE:
+        display-name: "&8Роза Иссушителя"
+        base-price: 200.0
+      TOTEM_OF_UNDYING:
+        display-name: "&6Тотем бессмертия"
+        base-price: 2000.0
+      TRIDENT:
+        display-name: "&bТрезубец"
+        base-price: 800.0
+      HEART_OF_THE_SEA:
+        display-name: "&bСердце моря"
+        base-price: 1000.0
+      SPONGE:
+        display-name: "&eГубка"
+        base-price: 50.0
+      PRISMARINE_CRYSTALS:
+        display-name: "&bКристаллы призмарина"
+        base-price: 15.0
+      PRISMARINE_SHARD:
+        display-name: "&3Осколок призмарина"
+        base-price: 10.0
+      TRIAL_KEY:
+        display-name: "&eКлюч испытания"
+        base-price: 250.0
+      OMINOUS_TRIAL_KEY:
+        display-name: "&cЗловещий ключ испытания"
+        base-price: 600.0
+      BREEZE_ROD:
+        display-name: "&bСтержень вихря"
+        base-price: 120.0
+      WIND_CHARGE:
+        display-name: "&fЗаряд ветра"
+        base-price: 40.0
+      BOGGED_HEAD:
+        display-name: "&2Голова болотника"
+        base-price: 300.0
 
+  # ─── ДЕРЕВО ───────────────────────────────
   wood:
     display-name: "&2🪵 Дерево"
     description: "&7Брёвна и древесные материалы"
     icon: OAK_LOG
     slot: 20
+    enabled: true
     items:
       OAK_LOG:
         display-name: "&6Дуб"
@@ -228,9 +411,414 @@ categories:
       MANGROVE_LOG:
         display-name: "&4Мангровое"
         base-price: 3.0
-      RED_MUSHROOM:
-        display-name: "&cКрасный гриб"
+      PALE_OAK_LOG:
+        display-name: "&fБелый дуб"
         base-price: 5.0
-      BROWN_MUSHROOM:
-        display-name: "&6Коричневый гриб"
+      OAK_SAPLING:
+        display-name: "&aSapling дуба"
+        base-price: 1.0
+      BAMBOO_BLOCK:
+        display-name: "&aБамбуковый блок"
+        base-price: 1.5
+      STICK:
+        display-name: "&6Палка"
+        base-price: 0.3
+
+  # ─── СТРОИТЕЛЬСТВО ────────────────────────
+  building:
+    display-name: "&f🧱 Строительство"
+    description: "&7Блоки и строительные материалы"
+    icon: STONE
+    slot: 22
+    enabled: true
+    items:
+      STONE:
+        display-name: "&8Камень"
+        base-price: 0.5
+      COBBLESTONE:
+        display-name: "&8Булыжник"
+        base-price: 0.3
+      SMOOTH_STONE:
+        display-name: "&7Гладкий камень"
+        base-price: 0.8
+      STONE_BRICKS:
+        display-name: "&7Каменный кирпич"
+        base-price: 1.5
+      GRANITE:
+        display-name: "&6Гранит"
+        base-price: 0.8
+      DIORITE:
+        display-name: "&fДиорит"
+        base-price: 0.8
+      ANDESITE:
+        display-name: "&8Андезит"
+        base-price: 0.8
+      DEEPSLATE:
+        display-name: "&8Глубинный сланец"
+        base-price: 1.0
+      TUFF:
+        display-name: "&8Туф"
+        base-price: 0.6
+      CALCITE:
+        display-name: "&fКальцит"
+        base-price: 1.0
+      DRIPSTONE_BLOCK:
+        display-name: "&6Сталактитовый блок"
+        base-price: 1.5
+      POINTED_DRIPSTONE:
+        display-name: "&6Остроконечный сталактит"
+        base-price: 1.0
+      MOSS_BLOCK:
+        display-name: "&2Блок мха"
+        base-price: 2.0
+      ROOTED_DIRT:
+        display-name: "&6Дёрн с корнями"
+        base-price: 1.0
+      SANDSTONE:
+        display-name: "&eПесчаник"
+        base-price: 1.5
+      RED_SANDSTONE:
+        display-name: "&6Красный песчаник"
+        base-price: 1.5
+      BASALT:
+        display-name: "&8Базальт"
+        base-price: 1.0
+      BLACKSTONE:
+        display-name: "&8Чёрный камень"
+        base-price: 1.0
+      NETHERRACK:
+        display-name: "&4Незерный камень"
+        base-price: 0.5
+      SOUL_SAND:
+        display-name: "&8Песок душ"
+        base-price: 3.0
+      SOUL_SOIL:
+        display-name: "&8Почва душ"
+        base-price: 3.0
+      MAGMA_BLOCK:
+        display-name: "&cМагмовый блок"
         base-price: 5.0
+      END_STONE:
+        display-name: "&eКамень Края"
+        base-price: 8.0
+      PURPUR_BLOCK:
+        display-name: "&5Блок пурпура"
+        base-price: 12.0
+      TERRACOTTA:
+        display-name: "&6Терракота"
+        base-price: 2.0
+      PACKED_MUD:
+        display-name: "&6Утрамбованная грязь"
+        base-price: 1.0
+      MUD_BRICKS:
+        display-name: "&6Грязевой кирпич"
+        base-price: 2.0
+      CHISELED_TUFF:
+        display-name: "&8Тёсаный туф"
+        base-price: 2.0
+
+  # ─── ЗЕЛЬЯ И КРАФТ ───────────────────────
+  brewing:
+    display-name: "&5🧪 Зелья и крафт"
+    description: "&7Ингредиенты для зельеварения"
+    icon: GLASS_BOTTLE
+    slot: 24
+    enabled: true
+    items:
+      GLASS_BOTTLE:
+        display-name: "&fСтеклянный пузырёк"
+        base-price: 1.0
+      GLASS:
+        display-name: "&fСтекло"
+        base-price: 1.5
+      SUGAR:
+        display-name: "&fСахар"
+        base-price: 1.5
+      GLISTERING_MELON_SLICE:
+        display-name: "&6Блестящая дыня"
+        base-price: 20.0
+      GOLDEN_CARROT:
+        display-name: "&6Золотая морковь"
+        base-price: 30.0
+      PUFFERFISH:
+        display-name: "&eРыба-шар"
+        base-price: 10.0
+      MAGMA_CREAM:
+        display-name: "&6Магмовый крем"
+        base-price: 20.0
+      GHAST_TEAR:
+        display-name: "&fСлеза Гаста"
+        base-price: 80.0
+      BLAZE_POWDER:
+        display-name: "&6Порошок огненного"
+        base-price: 12.0
+      SPIDER_EYE:
+        display-name: "&cГлаз паука"
+        base-price: 10.0
+      FERMENTED_SPIDER_EYE:
+        display-name: "&8Ферментированный глаз"
+        base-price: 18.0
+      PHANTOM_MEMBRANE:
+        display-name: "&5Плёнка Фантома"
+        base-price: 60.0
+      TURTLE_SCUTE:
+        display-name: "&aЧешуя черепахи"
+        base-price: 40.0
+      RABBIT_FOOT:
+        display-name: "&fЛапка кролика"
+        base-price: 25.0
+      DRAGON_BREATH:
+        display-name: "&5Дыхание Дракона"
+        base-price: 400.0
+      GUNPOWDER:
+        display-name: "&8Порох"
+        base-price: 12.0
+      GLOWSTONE_DUST:
+        display-name: "&eСветопыль"
+        base-price: 6.0
+      REDSTONE:
+        display-name: "&cКрасная пыль"
+        base-price: 5.0
+
+  # ─── НЕЖИТЬ И МОБ-ДРОПЫ ─────────────────
+  mob_drops:
+    display-name: "&c☠ Дропы мобов"
+    description: "&7Трофеи и особые дропы"
+    icon: SKULL_BANNER_PATTERN
+    slot: 28
+    enabled: true
+    items:
+      ROTTEN_FLESH:
+        display-name: "&8Гнилая плоть"
+        base-price: 1.0
+      ZOMBIE_HEAD:
+        display-name: "&2Голова зомби"
+        base-price: 150.0
+      SKELETON_SKULL:
+        display-name: "&fЧереп скелета"
+        base-price: 150.0
+      CREEPER_HEAD:
+        display-name: "&aГолова крипера"
+        base-price: 200.0
+      WITHER_SKELETON_SKULL:
+        display-name: "&8Череп иссушителя-скелета"
+        base-price: 500.0
+      PIGLIN_HEAD:
+        display-name: "&6Голова пиглина"
+        base-price: 150.0
+      NETHER_STAR:
+        display-name: "&fЗвезда Незера"
+        base-price: 5000.0
+      ENDER_EYE:
+        display-name: "&5Глаз Эндера"
+        base-price: 50.0
+      EXPERIENCE_BOTTLE:
+        display-name: "&aБутыль опыта"
+        base-price: 8.0
+      MUSIC_DISC_CAT:
+        display-name: "&aДиск: Cat"
+        base-price: 300.0
+      MUSIC_DISC_13:
+        display-name: "&8Диск: 13"
+        base-price: 300.0
+      SADDLE:
+        display-name: "&6Седло"
+        base-price: 50.0
+      LEAD:
+        display-name: "&6Поводок"
+        base-price: 10.0
+      NAME_TAG:
+        display-name: "&fБирка с именем"
+        base-price: 80.0
+      CHISELED_BOOKSHELF:
+        display-name: "&6Резной книжный шкаф"
+        base-price: 30.0
+
+  # ─── НИЖНИЙ МИР ──────────────────────────
+  nether:
+    display-name: "&4🔥 Нижний мир"
+    description: "&7Ресурсы из ада"
+    icon: NETHERRACK
+    slot: 30
+    enabled: true
+    items:
+      NETHERRACK:
+        display-name: "&4Незерный камень"
+        base-price: 0.5
+      NETHER_QUARTZ_ORE:
+        display-name: "&fКварцевая руда Незера"
+        base-price: 6.0
+      NETHER_GOLD_ORE:
+        display-name: "&6Золотая руда Незера"
+        base-price: 10.0
+      ANCIENT_DEBRIS:
+        display-name: "&8Древние обломки"
+        base-price: 1500.0
+      NETHER_BRICK:
+        display-name: "&8Незерный кирпич"
+        base-price: 4.0
+      NETHER_WART:
+        display-name: "&cАдский нарост"
+        base-price: 8.0
+      SOUL_SAND:
+        display-name: "&8Песок душ"
+        base-price: 3.0
+      SOUL_SOIL:
+        display-name: "&8Почва душ"
+        base-price: 3.0
+      MAGMA_BLOCK:
+        display-name: "&cМагмовый блок"
+        base-price: 5.0
+      BASALT:
+        display-name: "&8Базальт"
+        base-price: 1.0
+      BLACKSTONE:
+        display-name: "&8Чёрный камень"
+        base-price: 1.0
+      CRYING_OBSIDIAN:
+        display-name: "&5Плачущий обсидиан"
+        base-price: 35.0
+      SHROOMLIGHT:
+        display-name: "&eШромлайт"
+        base-price: 15.0
+      CRIMSON_FUNGUS:
+        display-name: "&cПунцовый гриб"
+        base-price: 6.0
+      WARPED_FUNGUS:
+        display-name: "&2Искажённый гриб"
+        base-price: 6.0
+      GILDED_BLACKSTONE:
+        display-name: "&6Позолоченный чёрный камень"
+        base-price: 20.0
+      SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE:
+        display-name: "&6Шаблон отделки: Пятачок"
+        base-price: 200.0
+
+  # ─── КРАЙ ────────────────────────────────
+  end_world:
+    display-name: "&5🌌 Край"
+    description: "&7Ресурсы из Края"
+    icon: END_STONE
+    slot: 32
+    enabled: true
+    items:
+      END_STONE:
+        display-name: "&eКамень Края"
+        base-price: 8.0
+      END_STONE_BRICKS:
+        display-name: "&eКирпич Края"
+        base-price: 12.0
+      PURPUR_BLOCK:
+        display-name: "&5Блок пурпура"
+        base-price: 12.0
+      ENDER_PEARL:
+        display-name: "&5Жемчуг Эндера"
+        base-price: 30.0
+      ENDER_EYE:
+        display-name: "&5Глаз Эндера"
+        base-price: 50.0
+      CHORUS_FRUIT:
+        display-name: "&5Плод хоруса"
+        base-price: 12.0
+      CHORUS_FLOWER:
+        display-name: "&5Цветок хоруса"
+        base-price: 20.0
+      DRAGON_EGG:
+        display-name: "&5Яйцо Дракона"
+        base-price: 50000.0
+      DRAGON_BREATH:
+        display-name: "&5Дыхание Дракона"
+        base-price: 400.0
+      ELYTRA:
+        display-name: "&7Элитры"
+        base-price: 10000.0
+      SHULKER_SHELL:
+        display-name: "&5Панцирь Шалкера"
+        base-price: 150.0
+      ECHO_SHARD:
+        display-name: "&3Осколок эха"
+        base-price: 300.0
+
+  # ─── ДЕКОР ───────────────────────────────
+  decoration:
+    display-name: "&e🌸 Декор"
+    description: "&7Декоративные блоки и цветы"
+    icon: SUNFLOWER
+    slot: 34
+    enabled: true
+    items:
+      SUNFLOWER:
+        display-name: "&eПодсолнух"
+        base-price: 3.0
+      ROSE_BUSH:
+        display-name: "&cКустовая роза"
+        base-price: 3.0
+      PEONY:
+        display-name: "&dПион"
+        base-price: 3.0
+      LILAC:
+        display-name: "&5Сирень"
+        base-price: 3.0
+      DANDELION:
+        display-name: "&eОдуванчик"
+        base-price: 1.5
+      POPPY:
+        display-name: "&cМак"
+        base-price: 1.5
+      BLUE_ORCHID:
+        display-name: "&bСиняя орхидея"
+        base-price: 4.0
+      ALLIUM:
+        display-name: "&dАллиум"
+        base-price: 3.0
+      TORCHFLOWER:
+        display-name: "&6Горелоцвет"
+        base-price: 30.0
+      PITCHER_PLANT:
+        display-name: "&dКувшинковое растение"
+        base-price: 40.0
+      PINK_PETALS:
+        display-name: "&dРозовые лепестки"
+        base-price: 5.0
+      WITHER_ROSE:
+        display-name: "&8Роза Иссушителя"
+        base-price: 200.0
+      SPORE_BLOSSOM:
+        display-name: "&dСпоровый цветок"
+        base-price: 25.0
+      VINE:
+        display-name: "&2Лоза"
+        base-price: 1.0
+      GLOW_LICHEN:
+        display-name: "&aСветящийся лишайник"
+        base-price: 3.0
+      CANDLE:
+        display-name: "&eСвеча"
+        base-price: 5.0
+      LANTERN:
+        display-name: "&eФонарь"
+        base-price: 10.0
+      SOUL_LANTERN:
+        display-name: "&bФонарь душ"
+        base-price: 12.0
+      CHAIN:
+        display-name: "&7Цепь"
+        base-price: 8.0
+      COPPER_GRATE:
+        display-name: "&6Медная решётка"
+        base-price: 6.0
+      TUFF_BRICKS:
+        display-name: "&8Туфовый кирпич"
+        base-price: 2.0
+      BAMBOO_MOSAIC:
+        display-name: "&aBамбуковая мозаика"
+        base-price: 3.0
+      HANGING_ROOTS:
+        display-name: "&6Свисающие корни"
+        base-price: 1.5
+      BIG_DRIPLEAF:
+        display-name: "&aБольшой лист-капля"
+        base-price: 5.0
+      SMALL_DRIPLEAF:
+        display-name: "&aМаленький лист-капля"
+        base-price: 4.0

@@ -12,10 +12,11 @@ import java.util.Map;
  * Represents a category in the market GUI.
  *
  * <p>Categories group related items together and support seasonal demand
- * modifiers that apply price bonuses to all items within the category.</p>
+ * modifiers and can be individually disabled via {@code enabled: false}
+ * in items.yml.</p>
  *
  * @author n1xend
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  */
 public class MarketCategory {
@@ -25,9 +26,9 @@ public class MarketCategory {
     private final String description;
     private final Material icon;
     private final int guiSlot;
+    private final boolean enabled;
     private final Map<String, MarketItem> items = new LinkedHashMap<>();
 
-    // Seasonal demand state
     private boolean hotCategory = false;
     private double hotMultiplier = 1.0;
 
@@ -39,14 +40,17 @@ public class MarketCategory {
      * @param description short description shown in GUI lore
      * @param icon        material icon in the main menu
      * @param guiSlot     slot in the main menu inventory
+     * @param enabled     whether this category is visible and active
      */
     public MarketCategory(@NotNull String id, @NotNull String displayName,
-                           @NotNull String description, @NotNull Material icon, int guiSlot) {
+                           @NotNull String description, @NotNull Material icon,
+                           int guiSlot, boolean enabled) {
         this.id = id;
         this.displayName = displayName;
         this.description = description;
         this.icon = icon;
         this.guiSlot = guiSlot;
+        this.enabled = enabled;
     }
 
     // -------------------------------------------------------------------------
@@ -102,34 +106,28 @@ public class MarketCategory {
     // -------------------------------------------------------------------------
 
     @NotNull
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
 
     @NotNull
-    public String getDisplayName() {
-        return displayName;
-    }
+    public String getDisplayName() { return displayName; }
 
     @NotNull
-    public String getDescription() {
-        return description;
-    }
+    public String getDescription() { return description; }
 
     @NotNull
-    public Material getIcon() {
-        return icon;
-    }
+    public Material getIcon() { return icon; }
 
-    public int getGuiSlot() {
-        return guiSlot;
-    }
+    public int getGuiSlot() { return guiSlot; }
 
-    public boolean isHotCategory() {
-        return hotCategory;
-    }
+    /**
+     * Returns whether this category is enabled and visible in the shop GUI.
+     * Disabled categories are completely hidden from players.
+     *
+     * @return true if the category is enabled
+     */
+    public boolean isEnabled() { return enabled; }
 
-    public double getHotMultiplier() {
-        return hotMultiplier;
-    }
+    public boolean isHotCategory() { return hotCategory; }
+
+    public double getHotMultiplier() { return hotMultiplier; }
 }

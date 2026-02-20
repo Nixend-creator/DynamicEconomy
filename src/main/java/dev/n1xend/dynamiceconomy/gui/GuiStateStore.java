@@ -1,5 +1,6 @@
 package dev.n1xend.dynamiceconomy.gui;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -7,86 +8,89 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * In-memory store for per-player GUI navigation state.
- *
- * <p>Tracks which category and page each player is viewing, and the pending
- * sell operation data needed by the confirmation screen.</p>
+ * Per-player navigation state for all GUI screens.
  *
  * @author n1xend
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.2.2
  */
 public final class GuiStateStore {
 
-    /** Sell mode options available in the category GUI. */
-    public enum SellMode {
-        /** Sell all items of this material in inventory. */
-        ALL,
-        /** Sell one full stack (64). */
-        STACK,
-        /** Sell exactly one item. */
-        ONE
+    public enum SellMode { ALL, STACK, ONE }
+
+    // ── Shop state ────────────────────────────────────────────────────────────
+    private final Map<UUID, String>   category   = new HashMap<>();
+    private final Map<UUID, Integer>  page       = new HashMap<>();
+    private final Map<UUID, String>   sellItem   = new HashMap<>();
+    private final Map<UUID, Integer>  sellAmount = new HashMap<>();
+    private final Map<UUID, SellMode> sellMode   = new HashMap<>();
+
+    // ── Auction state ─────────────────────────────────────────────────────────
+    private final Map<UUID, Integer> auctionPage = new HashMap<>();
+    private final Map<UUID, String>  auctionMode = new HashMap<>(); // "ALL" or "MY"
+
+    // ── Shop ──────────────────────────────────────────────────────────────────
+
+    public void setCategory(@Nullable UUID uuid, @Nullable String catId) {
+        if (uuid != null) category.put(uuid, catId);
+    }
+    @Nullable public String getCategory(@Nullable UUID uuid) {
+        return uuid == null ? null : category.get(uuid);
     }
 
-    private GuiStateStore() {
-        throw new UnsupportedOperationException("Utility class");
+    public void setPage(@Nullable UUID uuid, int p) {
+        if (uuid != null) page.put(uuid, p);
+    }
+    public int getPage(@Nullable UUID uuid) {
+        return uuid == null ? 0 : page.getOrDefault(uuid, 0);
     }
 
-    private static final Map<UUID, String> playerCategory = new HashMap<>();
-    private static final Map<UUID, Integer> playerPage = new HashMap<>();
-    private static final Map<UUID, String> playerSellItem = new HashMap<>();
-    private static final Map<UUID, Integer> playerSellAmount = new HashMap<>();
-    private static final Map<UUID, SellMode> playerSellMode = new HashMap<>();
-
-    public static void setCategory(@Nullable UUID uuid, @Nullable String categoryId) {
-        if (uuid != null) playerCategory.put(uuid, categoryId);
+    public void setSellItem(@Nullable UUID uuid, @Nullable String matId) {
+        if (uuid != null) sellItem.put(uuid, matId);
+    }
+    @Nullable public String getSellItem(@Nullable UUID uuid) {
+        return uuid == null ? null : sellItem.get(uuid);
     }
 
-    @Nullable
-    public static String getCategory(@Nullable UUID uuid) {
-        return uuid != null ? playerCategory.get(uuid) : null;
+    public void setSellAmount(@Nullable UUID uuid, int a) {
+        if (uuid != null) sellAmount.put(uuid, a);
+    }
+    public int getSellAmount(@Nullable UUID uuid) {
+        return uuid == null ? 0 : sellAmount.getOrDefault(uuid, 0);
     }
 
-    public static void setPage(@Nullable UUID uuid, int page) {
-        if (uuid != null) playerPage.put(uuid, page);
+    public void setSellMode(@Nullable UUID uuid, @Nullable SellMode m) {
+        if (uuid != null && m != null) sellMode.put(uuid, m);
+    }
+    @NotNull public SellMode getSellMode(@Nullable UUID uuid) {
+        return uuid == null ? SellMode.ALL : sellMode.getOrDefault(uuid, SellMode.ALL);
     }
 
-    public static int getPage(@Nullable UUID uuid) {
-        return uuid != null ? playerPage.getOrDefault(uuid, 0) : 0;
+    // ── Auction ───────────────────────────────────────────────────────────────
+
+    public void setAuctionPage(@Nullable UUID uuid, int p) {
+        if (uuid != null) auctionPage.put(uuid, p);
+    }
+    public int getAuctionPage(@Nullable UUID uuid) {
+        return uuid == null ? 0 : auctionPage.getOrDefault(uuid, 0);
     }
 
-    public static void setSellItem(@Nullable UUID uuid, @Nullable String materialId) {
-        if (uuid != null) playerSellItem.put(uuid, materialId);
+    public void setAuctionMode(@Nullable UUID uuid, @Nullable String mode) {
+        if (uuid != null && mode != null) auctionMode.put(uuid, mode);
+    }
+    @NotNull public String getAuctionMode(@Nullable UUID uuid) {
+        return uuid == null ? "ALL" : auctionMode.getOrDefault(uuid, "ALL");
     }
 
-    @Nullable
-    public static String getSellItem(@Nullable UUID uuid) {
-        return uuid != null ? playerSellItem.get(uuid) : null;
-    }
+    // ── Cleanup ───────────────────────────────────────────────────────────────
 
-    public static void setSellAmount(@Nullable UUID uuid, int amount) {
-        if (uuid != null) playerSellAmount.put(uuid, amount);
-    }
-
-    public static int getSellAmount(@Nullable UUID uuid) {
-        return uuid != null ? playerSellAmount.getOrDefault(uuid, 0) : 0;
-    }
-
-    public static void setSellMode(@Nullable UUID uuid, @Nullable SellMode mode) {
-        if (uuid != null && mode != null) playerSellMode.put(uuid, mode);
-    }
-
-    public static SellMode getSellMode(@Nullable UUID uuid) {
-        return uuid != null ? playerSellMode.getOrDefault(uuid, SellMode.ALL) : SellMode.ALL;
-    }
-
-    /** Clears all state for a player. Call when they close the shop entirely. */
-    public static void cleanup(@Nullable UUID uuid) {
+    public void cleanup(@Nullable UUID uuid) {
         if (uuid == null) return;
-        playerCategory.remove(uuid);
-        playerPage.remove(uuid);
-        playerSellItem.remove(uuid);
-        playerSellAmount.remove(uuid);
-        playerSellMode.remove(uuid);
+        category.remove(uuid);
+        page.remove(uuid);
+        sellItem.remove(uuid);
+        sellAmount.remove(uuid);
+        sellMode.remove(uuid);
+        auctionPage.remove(uuid);
+        auctionMode.remove(uuid);
     }
 }

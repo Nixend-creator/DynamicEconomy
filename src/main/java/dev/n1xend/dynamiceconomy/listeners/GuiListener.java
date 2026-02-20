@@ -1,242 +1,326 @@
 package dev.n1xend.dynamiceconomy.listeners;
 
 import dev.n1xend.dynamiceconomy.DynamicEconomy;
+import dev.n1xend.dynamiceconomy.auction.AuctionService;
+import dev.n1xend.dynamiceconomy.data.models.AuctionListing;
 import dev.n1xend.dynamiceconomy.data.models.MarketCategory;
 import dev.n1xend.dynamiceconomy.data.models.MarketItem;
 import dev.n1xend.dynamiceconomy.gui.*;
+import dev.n1xend.dynamiceconomy.services.BuyService;
 import dev.n1xend.dynamiceconomy.services.EconomyService;
 import dev.n1xend.dynamiceconomy.utils.GUIHelper;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
 /**
- * Handles all inventory click events for DynamicEconomy GUIs.
+ * Handles all GUI inventory events for DynamicEconomy.
  *
- * <p>Routes click events to the appropriate GUI handler based on inventory title.
- * All GUI inventories are identified by their title string prefix.</p>
+ * <p><b>Critical Paper 1.21 note:</b> always use
+ * {@code event.getView().getTopInventory()} to get the plugin-owned
+ * inventory. {@code event.getInventory()} returns whatever inventory
+ * the click physically landed in — this can be the player's own
+ * inventory (bottom half), whose holder is a {@code HumanEntity},
+ * not our {@link GuiHolder}, causing all routing to silently fail.</p>
  *
  * @author n1xend
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.2.2
  */
-public class GuiListener implements Listener {
+public final class GuiListener implements Listener {
 
     private final DynamicEconomy plugin;
-    private final MainMenuGui mainMenuGui;
-    private final CategoryGui categoryGui;
+    private final MainMenuGui    mainMenuGui;
+    private final CategoryGui    categoryGui;
     private final SellConfirmGui sellConfirmGui;
+    private final BuyConfirmGui  buyConfirmGui;
+    private final AuctionGui     auctionGui;
 
     public GuiListener(@NotNull DynamicEconomy plugin) {
-        this.plugin = plugin;
-        this.mainMenuGui = new MainMenuGui(plugin);
-        this.categoryGui = new CategoryGui(plugin);
+        this.plugin         = plugin;
+        this.mainMenuGui    = new MainMenuGui(plugin);
+        this.categoryGui    = new CategoryGui(plugin);
         this.sellConfirmGui = new SellConfirmGui(plugin);
+        this.buyConfirmGui  = new BuyConfirmGui(plugin);
+        this.auctionGui     = new AuctionGui(plugin);
     }
 
-    // -------------------------------------------------------------------------
-    // Click events
-    // -------------------------------------------------------------------------
+    // ── Drag ──────────────────────────────────────────────────────────────────
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onDrag(@NotNull InventoryDragEvent event) {
+        if (holderOf(event.getView().getTopInventory()) != null) {
+            event.setCancelled(true);
+        }
+    }
+
+    // ── Click ─────────────────────────────────────────────────────────────────
+
+    @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) {
-            return;
-        }
+        if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        String title = event.getView().getTitle();
-        if (!isOurGui(title)) {
-            return;
-        }
+        // IMPORTANT: read holder from TOP inventory, not event.getInventory()
+        Inventory topInv = event.getView().getTopInventory();
+        GuiHolder holder = holderOf(topInv);
+        if (holder == null) return;
 
         event.setCancelled(true);
 
-        ItemStack clicked = event.getCurrentItem();
-        if (clicked == null || clicked.getType().isAir()) {
-            return;
-        }
+        // Ignore clicks in the player's own inventory (bottom half)
+        if (event.getRawSlot() >= topInv.getSize()) return;
 
-        int slot = event.getRawSlot();
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType().isAir()) return;
+
+        int       slot  = event.getRawSlot();
         ClickType click = event.getClick();
 
-        if (title.equals(MainMenuGui.TITLE)) {
-            handleMainMenu(player, slot);
-        } else if (title.startsWith("§6§l") && !title.startsWith(SellConfirmGui.TITLE_PREFIX)) {
-            handleCategoryMenu(player, slot, clicked, click);
-        } else if (title.startsWith(SellConfirmGui.TITLE_PREFIX)) {
-            handleConfirmMenu(player, slot);
+        switch (holder.getType()) {
+            case MAIN_MENU    -> handleMainMenu(player, slot);
+            case CATEGORY     -> handleCategory(player, holder.getMeta(), slot, clicked, click);
+            case SELL_CONFIRM -> handleSellConfirm(player, holder.getMeta(), slot);
+            case BUY_CONFIRM  -> handleBuyConfirm(player, holder.getMeta(), slot);
+            case AUCTION      -> handleAuction(player, holder.getMeta(), slot);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Close events
-    // -------------------------------------------------------------------------
+    // ── Close ─────────────────────────────────────────────────────────────────
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryClose(@NotNull InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) {
-            return;
+        if (!(event.getPlayer() instanceof Player player)) return;
+        GuiHolder holder = holderOf(event.getView().getTopInventory());
+        if (holder != null && holder.getType() == GuiHolder.GuiType.MAIN_MENU) {
+            plugin.getGuiStateStore().cleanup(player.getUniqueId());
         }
-
-        // Delay cleanup by 1 tick — navigation clicks need state in the same tick
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            String newTitle = player.getOpenInventory().getTitle();
-            if (!isOurGui(newTitle)) {
-                GuiStateStore.cleanup(player.getUniqueId());
-            }
-        }, 1L);
     }
 
-    // -------------------------------------------------------------------------
-    // Main menu handler
-    // -------------------------------------------------------------------------
+    // ── Main Menu ─────────────────────────────────────────────────────────────
 
     private void handleMainMenu(@NotNull Player player, int slot) {
-        for (MarketCategory category : plugin.getEconomyService().getCategories().values()) {
-            if (category.getGuiSlot() == slot) {
-                categoryGui.open(player, category.getId(), 0);
+        for (MarketCategory cat : plugin.getEconomyService().getCategories().values()) {
+            if (cat.getGuiSlot() == slot) {
+                categoryGui.open(player, cat.getId(), 0);
                 return;
             }
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Category menu handler
-    // -------------------------------------------------------------------------
+    // ── Category ──────────────────────────────────────────────────────────────
 
-    private void handleCategoryMenu(@NotNull Player player, int slot,
-                                     @NotNull ItemStack clicked, @NotNull ClickType click) {
-        UUID uuid = player.getUniqueId();
-        String categoryId = GuiStateStore.getCategory(uuid);
-        int page = GuiStateStore.getPage(uuid);
+    private void handleCategory(@NotNull Player player, @NotNull String catId,
+                                  int slot, @NotNull ItemStack clicked,
+                                  @NotNull ClickType click) {
+        UUID          uuid  = player.getUniqueId();
+        GuiStateStore store = plugin.getGuiStateStore();
+        int           pg    = store.getPage(uuid);
 
-        // Back button
-        if (slot == 49) {
-            mainMenuGui.open(player);
-            return;
+        if (slot == CategoryGui.SLOT_BACK)   { mainMenuGui.open(player); return; }
+        if (slot == CategoryGui.SLOT_PREV)   { categoryGui.open(player, catId, Math.max(0, pg - 1)); return; }
+        if (slot == CategoryGui.SLOT_NEXT)   { categoryGui.open(player, catId, pg + 1); return; }
+        if (slot == CategoryGui.SLOT_HEADER) return;
+        if (!CategoryGui.isItemSlot(slot))   return;
+
+        MarketItem item = plugin.getEconomyService().getItemByMaterial(clicked.getType());
+        if (item == null) return;
+
+        if (click == ClickType.RIGHT || click == ClickType.SHIFT_RIGHT) {
+            if (plugin.getConfig().getBoolean("buy-mode.enabled", true)) {
+                buyConfirmGui.open(player, item.getId());
+            }
+        } else {
+            GuiStateStore.SellMode mode = (click == ClickType.SHIFT_LEFT)
+                    ? GuiStateStore.SellMode.ONE
+                    : GuiStateStore.SellMode.ALL;
+            sellConfirmGui.open(player, item.getId(), mode);
         }
-
-        // Pagination
-        if (slot == 45 && page > 0) {
-            categoryGui.open(player, categoryId, page - 1);
-            return;
-        }
-        if (slot == 53) {
-            categoryGui.open(player, categoryId, page + 1);
-            return;
-        }
-
-        // Item click — only handle inner item slots
-        if (!CategoryGui.isItemSlot(slot)) {
-            return;
-        }
-
-        MarketItem item = plugin.getEconomyService().getItem(clicked.getType().name());
-        if (item == null) {
-            return;
-        }
-
-        GuiStateStore.SellMode mode = switch (click) {
-            case RIGHT -> GuiStateStore.SellMode.STACK;
-            case SHIFT_LEFT, SHIFT_RIGHT -> GuiStateStore.SellMode.ONE;
-            default -> GuiStateStore.SellMode.ALL;
-        };
-
-        sellConfirmGui.open(player, item.getId(), mode);
     }
 
-    // -------------------------------------------------------------------------
-    // Confirm menu handler
-    // -------------------------------------------------------------------------
+    // ── Sell Confirm ──────────────────────────────────────────────────────────
 
-    private void handleConfirmMenu(@NotNull Player player, int slot) {
-        UUID uuid = player.getUniqueId();
-        String categoryId = GuiStateStore.getCategory(uuid);
-        String materialId = GuiStateStore.getSellItem(uuid);
+    private void handleSellConfirm(@NotNull Player player, @NotNull String materialId, int slot) {
+        UUID          uuid  = player.getUniqueId();
+        GuiStateStore store = plugin.getGuiStateStore();
 
-        // Cancel
         if (slot == SellConfirmGui.getCancelSlot()) {
-            if (categoryId != null) {
-                categoryGui.open(player, categoryId, GuiStateStore.getPage(uuid));
-            } else {
-                mainMenuGui.open(player);
-            }
+            String catId = store.getCategory(uuid);
+            if (catId != null) categoryGui.open(player, catId, store.getPage(uuid));
+            else               mainMenuGui.open(player);
             return;
         }
 
-        // Confirm sell
         if (slot == SellConfirmGui.getConfirmSlot()) {
-            if (materialId == null) {
-                return;
+            String resolvedId = store.getSellItem(uuid);
+            if (resolvedId == null) resolvedId = materialId;
+            int amount = store.getSellAmount(uuid);
+
+            EconomyService.SellData result =
+                    plugin.getEconomyService().trySell(player, resolvedId, amount);
+
+            if (result.result() == EconomyService.SellResult.SUCCESS) {
+                plugin.getLicenseService().recordSell(player, amount, result.payout());
+                plugin.getTreasuryService().collectTax(
+                        result.payout() * plugin.getLicenseService().getTaxRate(player));
             }
 
-            int amount = GuiStateStore.getSellAmount(uuid);
-            EconomyService.SellData result = plugin.getEconomyService().trySell(player, materialId, amount);
-            sendSellFeedback(player, result);
+            sendSellFeedback(player, result, amount);
 
-            // Re-open category on next tick after sell
-            String finalCategoryId = categoryId;
-            int finalPage = GuiStateStore.getPage(uuid);
+            String fCat  = store.getCategory(uuid);
+            int    fPage = store.getPage(uuid);
             plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                if (finalCategoryId != null) {
-                    categoryGui.open(player, finalCategoryId, finalPage);
-                } else {
-                    mainMenuGui.open(player);
-                }
+                if (fCat != null) categoryGui.open(player, fCat, fPage);
+                else              mainMenuGui.open(player);
             }, 1L);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Sell result feedback
-    // -------------------------------------------------------------------------
+    // ── Buy Confirm ───────────────────────────────────────────────────────────
 
-    private void sendSellFeedback(@NotNull Player player, @NotNull EconomyService.SellData data) {
-        switch (data.result()) {
-            case SUCCESS -> {
-                String msg = plugin.getMessageManager().prefixed("sell.success",
-                    "%amount%", GuiStateStore.getSellAmount(player.getUniqueId()),
-                    "%item%", data.itemDisplayName(),
-                    "%payout%", GUIHelper.formatPrice(data.payout()));
-                player.sendMessage(msg);
+    private void handleBuyConfirm(@NotNull Player player, @NotNull String materialId, int slot) {
+        UUID          uuid  = player.getUniqueId();
+        GuiStateStore store = plugin.getGuiStateStore();
 
-                String priceMsg = plugin.getMessageManager().prefixed("sell.price-now",
-                    "%percent%", String.format("%.0f", data.multiplierAfter() * 100));
-                player.sendMessage(priceMsg);
+        if (slot == BuyConfirmGui.getBackSlot()) {
+            String catId = store.getCategory(uuid);
+            if (catId != null) categoryGui.open(player, catId, store.getPage(uuid));
+            else               mainMenuGui.open(player);
+            return;
+        }
 
-                if (data.hadDiversityBonus()) {
-                    int bonusPct = (int) (plugin.getConfigManager().getDiversityBonusMultiplier() * 100);
-                    player.sendMessage(plugin.getMessageManager().get("sell.bonus-diversity", "%bonus%", bonusPct));
-                }
-                if (data.hadContractBonus()) {
-                    int bonusPct = (int) (plugin.getConfigManager().getContractBonusMultiplier() * 100);
-                    player.sendMessage(plugin.getMessageManager().get("sell.bonus-contract", "%bonus%", bonusPct));
-                }
+        int amount = 0;
+        if (slot == BuyConfirmGui.getBuy1Slot())  amount = 1;
+        if (slot == BuyConfirmGui.getBuy8Slot())  amount = 8;
+        if (slot == BuyConfirmGui.getBuy64Slot()) amount = 64;
+        if (amount == 0) return;
+
+        BuyService.BuyData result = plugin.getBuyService().tryBuy(player, materialId, amount);
+        sendBuyFeedback(player, result);
+
+        plugin.getServer().getScheduler().runTaskLater(plugin,
+                () -> buyConfirmGui.open(player, materialId), 1L);
+    }
+
+    // ── Auction ───────────────────────────────────────────────────────────────
+
+    private void handleAuction(@NotNull Player player, @NotNull String meta, int slot) {
+        UUID          uuid  = player.getUniqueId();
+        GuiStateStore store = plugin.getGuiStateStore();
+
+        // meta format: "MODE:page"  e.g. "ALL:0" or "MY:2"
+        String[] parts = meta.split(":", 2);
+        String   mode  = parts.length > 0 ? parts[0] : "ALL";
+        int      pg    = store.getAuctionPage(uuid);
+
+        if (slot == AuctionGui.SLOT_PREV) {
+            if (mode.equals("MY")) auctionGui.openMyLots(player, Math.max(0, pg - 1));
+            else                   auctionGui.open(player, Math.max(0, pg - 1));
+            return;
+        }
+        if (slot == AuctionGui.SLOT_NEXT) {
+            if (mode.equals("MY")) auctionGui.openMyLots(player, pg + 1);
+            else                   auctionGui.open(player, pg + 1);
+            return;
+        }
+        if (slot == AuctionGui.SLOT_MY_LOTS) {
+            if (mode.equals("MY")) auctionGui.open(player, 0);
+            else                   auctionGui.openMyLots(player, 0);
+            return;
+        }
+        if (slot == AuctionGui.SLOT_INFO || slot == AuctionGui.SLOT_HEADER) return;
+
+        if (!AuctionGui.isItemSlot(slot)) return;
+
+        // Find which listing this slot corresponds to
+        java.util.List<AuctionListing> listings = mode.equals("MY")
+                ? plugin.getAuctionService().getActiveListings().stream()
+                        .filter(l -> l.getSellerUuid().equals(uuid)).toList()
+                : plugin.getAuctionService().getActiveListings();
+
+        int idx = pg * AuctionGui.ITEMS_PER_PAGE + slotToIndex(slot);
+        if (idx < 0 || idx >= listings.size()) return;
+
+        AuctionListing listing = listings.get(idx);
+        boolean own = listing.getSellerUuid().equals(uuid);
+
+        if (own) {
+            // Cancel own listing
+            boolean ok = plugin.getAuctionService().cancelListing(player, listing.getId());
+            if (!ok) player.sendMessage("§cНе удалось отменить лот.");
+            plugin.getServer().getScheduler().runTaskLater(plugin,
+                    () -> { if (mode.equals("MY")) auctionGui.openMyLots(player, pg);
+                            else                   auctionGui.open(player, pg); }, 1L);
+        } else {
+            // Buy listing
+            AuctionService.BuyResult result =
+                    plugin.getAuctionService().buyListing(player, listing.getId());
+            switch (result) {
+                case NOT_FOUND          -> player.sendMessage("§cЛот уже продан или истёк.");
+                case OWN_LISTING        -> player.sendMessage("§cВы не можете купить собственный лот.");
+                case INSUFFICIENT_FUNDS -> player.sendMessage("§cНедостаточно монет для покупки.");
+                case SUCCESS            -> {} // message in AuctionService
             }
-            case COOLDOWN ->
-                player.sendMessage(plugin.getMessageManager().prefixed("sell.cooldown"));
-            case NOT_ENOUGH_ITEMS ->
-                player.sendMessage(plugin.getMessageManager().prefixed("sell.no-items",
-                    "%item%", data.itemDisplayName()));
-            case ITEM_NOT_SOLD ->
-                player.sendMessage(plugin.getMessageManager().prefixed("sell.unknown-item"));
+            plugin.getServer().getScheduler().runTaskLater(plugin,
+                    () -> auctionGui.open(player, pg), 1L);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Utility
-    // -------------------------------------------------------------------------
+    // ── Feedback ──────────────────────────────────────────────────────────────
 
-    private boolean isOurGui(@NotNull String title) {
-        return title.equals(MainMenuGui.TITLE)
-            || title.startsWith("§6§l")
-            || title.startsWith(SellConfirmGui.TITLE_PREFIX);
+    private void sendSellFeedback(@NotNull Player p,
+                                   @NotNull EconomyService.SellData d, int amount) {
+        switch (d.result()) {
+            case SUCCESS -> {
+                p.sendMessage("§a✓ Продано §e" + amount + "x " + d.itemDisplayName()
+                        + " §aза §6" + GUIHelper.formatPrice(d.payout()));
+                p.sendMessage("§7Цена теперь: §e"
+                        + String.format("%.0f%%", d.multiplierAfter() * 100));
+                if (d.hadDiversityBonus()) p.sendMessage("§a+ Бонус разнообразия!");
+                if (d.hadContractBonus())  p.sendMessage("§a+ Бонус контракта!");
+            }
+            case COOLDOWN         -> p.sendMessage("§cПодождите перед следующей продажей.");
+            case NOT_ENOUGH_ITEMS -> p.sendMessage("§cНедостаточно §e" + d.itemDisplayName());
+            case ITEM_NOT_SOLD    -> p.sendMessage("§cЭтот предмет не принимается.");
+        }
+    }
+
+    private void sendBuyFeedback(@NotNull Player p, @NotNull BuyService.BuyData d) {
+        switch (d.result()) {
+            case SUCCESS            -> p.sendMessage("§a✓ Куплено §e" + d.itemDisplayName()
+                    + " §aза §6" + GUIHelper.formatPrice(d.totalCost()));
+            case INSUFFICIENT_FUNDS -> p.sendMessage("§cНедостаточно монет. Нужно: §e"
+                    + GUIHelper.formatPrice(d.totalCost()));
+            case INVENTORY_FULL     -> p.sendMessage("§cНет места в инвентаре.");
+            case ITEM_NOT_FOUND     -> p.sendMessage("§cПредмет не найден.");
+            case BUY_MODE_DISABLED  -> p.sendMessage("§cРежим покупки отключён.");
+        }
+    }
+
+    // ── Util ──────────────────────────────────────────────────────────────────
+
+    /** Converts a raw slot index to a 0-based listing index within the current page. */
+    private int slotToIndex(int slot) {
+        for (int i = 0; i < AuctionGui.ITEM_SLOTS.length; i++) {
+            if (AuctionGui.ITEM_SLOTS[i] == slot) return i;
+        }
+        return -1;
+    }
+
+    @Nullable
+    private GuiHolder holderOf(@Nullable Inventory inv) {
+        if (inv == null) return null;
+        InventoryHolder h = inv.getHolder();
+        return (h instanceof GuiHolder gh) ? gh : null;
     }
 }

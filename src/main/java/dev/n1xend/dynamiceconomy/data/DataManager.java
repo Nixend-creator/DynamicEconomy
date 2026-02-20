@@ -3,122 +3,123 @@ package dev.n1xend.dynamiceconomy.data;
 import com.google.gson.*;
 import dev.n1xend.dynamiceconomy.DynamicEconomy;
 import dev.n1xend.dynamiceconomy.data.models.MarketItem;
+import dev.n1xend.dynamiceconomy.database.DatabaseManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Handles JSON persistence of market item state between server restarts.
+ * Persists market item state between server restarts.
  *
- * <p>Saves and loads: current price multiplier, last sell timestamp,
- * and total sold statistics for every market item.</p>
- *
- * <p>{@link #save()} is thread-safe and can be called from async contexts.</p>
+ * <p>Uses {@link DatabaseManager} (MySQL or SQLite) when
+ * {@code database.enabled: true} in config, otherwise falls back to
+ * {@code market_data.json}.</p>
  *
  * @author n1xend
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.2.1
  */
-public class DataManager {
+public final class DataManager {
 
-    private static final String DATA_FILE_NAME = "market_data.json";
+    private static final String JSON_FILE = "market_data.json";
 
-    private final DynamicEconomy plugin;
-    private final Logger logger;
-    private final Path dataFile;
-    private final Gson gson;
+    private final DynamicEconomy   plugin;
+    private final Logger           logger;
+    private final Path             jsonFile;
+    private final Gson             gson;
+    private final DatabaseManager  db;
+    private final boolean          useDb;
 
     public DataManager(@NotNull DynamicEconomy plugin) {
-        this.plugin = plugin;
-        this.logger = plugin.getLogger();
-        this.dataFile = plugin.getDataFolder().toPath().resolve(DATA_FILE_NAME);
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
+        this.plugin   = Objects.requireNonNull(plugin);
+        this.logger   = plugin.getLogger();
+        this.jsonFile = plugin.getDataFolder().toPath().resolve(JSON_FILE);
+        this.gson     = new GsonBuilder().setPrettyPrinting().create();
+
+        boolean dbEnabled = plugin.getConfig().getBoolean("database.enabled", false);
+        if (dbEnabled) {
+            this.db    = new DatabaseManager(plugin);
+            this.useDb = db.connect();
+            if (!useDb) logger.warning("[DB] Connection failed — using JSON fallback.");
+        } else {
+            this.db    = null;
+            this.useDb = false;
+        }
     }
 
-    // -------------------------------------------------------------------------
-    // Load
-    // -------------------------------------------------------------------------
+    // ── Load ──────────────────────────────────────────────────────────────────
 
-    /**
-     * Loads market item states from {@code market_data.json}.
-     * Called once on startup after EconomyService has registered all items.
-     * Missing items in JSON are silently skipped (new items use default multiplier).
-     */
     public void load() {
-        if (!Files.exists(dataFile)) {
+        if (useDb) {
+            int n = db.loadAll(plugin.getEconomyService().getItemIndex());
+            logger.info("[DB] Loaded " + n + " item states from database.");
+        } else {
+            loadJson();
+        }
+    }
+
+    // ── Save ──────────────────────────────────────────────────────────────────
+
+    public synchronized void save() {
+        if (useDb) {
+            db.saveAll(plugin.getEconomyService().getItemIndex().values());
+        } else {
+            saveJson();
+        }
+    }
+
+    // ── Shutdown ──────────────────────────────────────────────────────────────
+
+    public void shutdown() {
+        save();
+        if (db != null) db.disconnect();
+    }
+
+    // ── JSON fallback ─────────────────────────────────────────────────────────
+
+    private void loadJson() {
+        if (!Files.exists(jsonFile)) {
             logger.info("No market_data.json found — starting with default prices.");
             return;
         }
-
-        try (Reader reader = Files.newBufferedReader(dataFile)) {
-            JsonObject root = gson.fromJson(reader, JsonObject.class);
-            if (root == null) {
-                return;
-            }
-
+        try (Reader r = Files.newBufferedReader(jsonFile)) {
+            JsonObject root = gson.fromJson(r, JsonObject.class);
+            if (root == null) return;
             int loaded = 0;
             for (var entry : root.entrySet()) {
-                String materialId = entry.getKey();
-                MarketItem item = plugin.getEconomyService().getItem(materialId);
-                if (item == null) {
-                    continue;
-                }
-
-                JsonObject data = entry.getValue().getAsJsonObject();
-                if (data.has("multiplier")) {
-                    item.setCurrentMultiplier(data.get("multiplier").getAsDouble());
-                }
-                if (data.has("lastSell")) {
-                    item.setLastSellTimestamp(data.get("lastSell").getAsLong());
-                }
-                if (data.has("totalSold")) {
-                    item.setTotalSold(data.get("totalSold").getAsLong());
-                }
+                MarketItem item = plugin.getEconomyService().getItem(entry.getKey());
+                if (item == null) continue;
+                JsonObject d = entry.getValue().getAsJsonObject();
+                if (d.has("multiplier")) item.setCurrentMultiplier(d.get("multiplier").getAsDouble());
+                if (d.has("lastSell"))   item.setLastSellTimestamp(d.get("lastSell").getAsLong());
+                if (d.has("totalSold"))  item.setTotalSold(d.get("totalSold").getAsLong());
                 loaded++;
             }
-
-            logger.info("Loaded market data for " + loaded + " items.");
-
-        } catch (IOException e) {
+            logger.info("Loaded " + loaded + " item states from market_data.json.");
+        } catch (IOException | JsonParseException e) {
             logger.log(Level.SEVERE, "Failed to load market_data.json", e);
-        } catch (JsonParseException e) {
-            logger.log(Level.SEVERE, "Corrupted market_data.json — resetting prices", e);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Save
-    // -------------------------------------------------------------------------
-
-    /**
-     * Saves all market item states to {@code market_data.json}.
-     *
-     * <p>Thread-safe — synchronized to prevent concurrent writes during async auto-save
-     * and synchronous onDisable.</p>
-     */
-    public synchronized void save() {
+    private void saveJson() {
         try {
-            Files.createDirectories(dataFile.getParent());
-
+            Files.createDirectories(jsonFile.getParent());
             JsonObject root = new JsonObject();
-
-            for (var category : plugin.getEconomyService().getCategories().values()) {
-                for (MarketItem item : category.getItems()) {
-                    JsonObject data = new JsonObject();
-                    data.addProperty("multiplier", item.getCurrentMultiplier());
-                    data.addProperty("lastSell", item.getLastSellTimestamp());
-                    data.addProperty("totalSold", item.getTotalSold());
-                    root.add(item.getId(), data);
+            for (var cat : plugin.getEconomyService().getCategories().values()) {
+                for (MarketItem item : cat.getItems()) {
+                    JsonObject d = new JsonObject();
+                    d.addProperty("multiplier", item.getCurrentMultiplier());
+                    d.addProperty("lastSell",   item.getLastSellTimestamp());
+                    d.addProperty("totalSold",  item.getTotalSold());
+                    root.add(item.getId(), d);
                 }
             }
-
-            try (Writer writer = Files.newBufferedWriter(dataFile)) {
-                gson.toJson(root, writer);
+            try (Writer w = Files.newBufferedWriter(jsonFile)) {
+                gson.toJson(root, w);
             }
-
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to save market_data.json", e);
         }

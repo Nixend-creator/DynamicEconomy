@@ -11,175 +11,138 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Utility methods for building and manipulating Paper inventory GUIs.
+ * GUI utility helpers — item building, filling, formatting.
  *
  * @author n1xend
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.2.1
  */
 public final class GUIHelper {
 
-    private GUIHelper() {
-        throw new UnsupportedOperationException("Utility class");
-    }
+    private GUIHelper() {}
 
-    // -------------------------------------------------------------------------
-    // Item building
-    // -------------------------------------------------------------------------
+    // ── Item building ─────────────────────────────────────────────────────────
 
-    /**
-     * Builds an ItemStack with a colored display name and lore.
-     *
-     * @param material material of the item
-     * @param name     display name (& color codes supported)
-     * @param lore     lore lines (& color codes supported), may be null
-     * @return configured item stack
-     */
+    /** Builds an ItemStack with coloured display name and lore. */
     @NotNull
-    public static ItemStack buildItem(@NotNull Material material, @NotNull String name, @Nullable List<String> lore) {
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(colorize(name));
-            if (lore != null) {
-                meta.setLore(lore.stream().map(GUIHelper::colorize).collect(Collectors.toList()));
-            }
-            item.setItemMeta(meta);
+    public static ItemStack item(@NotNull Material mat, @NotNull String name,
+                                  @Nullable List<String> lore) {
+        ItemStack is   = new ItemStack(mat);
+        ItemMeta  meta = is.getItemMeta();
+        if (meta == null) return is;
+        meta.setDisplayName(color(name));
+        if (lore != null) {
+            meta.setLore(lore.stream().map(GUIHelper::color).collect(Collectors.toList()));
         }
-        return item;
+        is.setItemMeta(meta);
+        return is;
     }
 
-    /**
-     * Builds an ItemStack with name and no lore.
-     *
-     * @param material material
-     * @param name     display name
-     * @return item stack
-     */
+    /** Builds an ItemStack with coloured display name, no lore. */
     @NotNull
-    public static ItemStack buildItem(@NotNull Material material, @NotNull String name) {
-        return buildItem(material, name, null);
+    public static ItemStack item(@NotNull Material mat, @NotNull String name) {
+        return item(mat, name, null);
     }
 
-    /**
-     * Creates a named glass pane used as a filler item (no lore, blank name).
-     *
-     * @param material glass pane material
-     * @return filler item
-     */
+    /** Creates a filler pane with a single space name (no lore). */
     @NotNull
-    public static ItemStack buildFiller(@NotNull Material material) {
-        return buildItem(material, " ");
+    public static ItemStack filler(@NotNull Material mat) {
+        return item(mat, " ");
     }
 
-    // -------------------------------------------------------------------------
-    // Inventory filling
-    // -------------------------------------------------------------------------
+    // ── Inventory filling ─────────────────────────────────────────────────────
 
-    /**
-     * Fills the entire inventory with the given item.
-     *
-     * @param inventory target inventory
-     * @param filler    filler item
-     */
-    public static void fill(@NotNull Inventory inventory, @NotNull ItemStack filler) {
-        for (int i = 0; i < inventory.getSize(); i++) {
-            inventory.setItem(i, filler);
-        }
+    /** Fills every slot with {@code filler}. */
+    public static void fill(@NotNull Inventory inv, @NotNull ItemStack filler) {
+        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, filler);
     }
 
-    /**
-     * Fills the border slots of a multi-row inventory.
-     * Border = top row + bottom row + left/right columns.
-     *
-     * @param inventory target inventory
-     * @param border    border item
-     */
-    public static void fillBorder(@NotNull Inventory inventory, @NotNull ItemStack border) {
-        int size = inventory.getSize();
+    /** Fills the border of a multi-row inventory (top row, bottom row, side columns). */
+    public static void fillBorder(@NotNull Inventory inv, @NotNull ItemStack border) {
+        int size = inv.getSize();
         int rows = size / 9;
-
-        for (int i = 0; i < 9; i++) {
-            inventory.setItem(i, border);
-        }
-        for (int i = size - 9; i < size; i++) {
-            inventory.setItem(i, border);
-        }
-        for (int row = 1; row < rows - 1; row++) {
-            inventory.setItem(row * 9, border);
-            inventory.setItem(row * 9 + 8, border);
+        for (int i = 0;          i < 9;    i++) inv.setItem(i, border);
+        for (int i = size - 9;   i < size; i++) inv.setItem(i, border);
+        for (int r = 1; r < rows - 1; r++) {
+            inv.setItem(r * 9,     border);
+            inv.setItem(r * 9 + 8, border);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Formatting helpers
-    // -------------------------------------------------------------------------
+    // ── Formatting ────────────────────────────────────────────────────────────
 
-    /**
-     * Translates {@code &} color codes to {@code §}.
-     *
-     * @param text input text
-     * @return colorized text
-     */
+    /** Translates {@code &} colour codes to {@code §}. */
     @NotNull
-    public static String colorize(@NotNull String text) {
-        return text.replace("&", "§");
+    public static String color(@NotNull String s) {
+        return s.replace("&", "§");
     }
 
-    /**
-     * Formats a double as a price string with 2 decimal places.
-     *
-     * @param price price value
-     * @return formatted string, e.g. "$12.50"
-     */
+    /** Formats a price value as "$12.50". */
     @NotNull
     public static String formatPrice(double price) {
         return String.format("$%.2f", price);
     }
 
-    /**
-     * Returns a colored trend arrow for the given price multiplier.
-     * Green up arrow for full price, yellow for mid, red double-down for low.
-     *
-     * @param multiplier current price multiplier
-     * @return colored arrow string with & codes
-     */
+    /** Trend arrow based on multiplier level. */
     @NotNull
-    public static String trendArrow(double multiplier) {
-        if (multiplier >= 0.9) return "&a▲";
-        if (multiplier >= 0.5) return "&e▼";
+    public static String trendArrow(double mult) {
+        if (mult >= 0.9) return "&a▲";
+        if (mult >= 0.5) return "&e▼";
         return "&c▼▼";
     }
 
-    /**
-     * Returns a color code prefix based on price multiplier level.
-     *
-     * @param multiplier current price multiplier
-     * @return color code string (e.g. "&a", "&e", "&c")
-     */
+    /** Colour code string based on multiplier level. */
     @NotNull
-    public static String priceColor(double multiplier) {
-        if (multiplier >= 0.9) return "&a";
-        if (multiplier >= 0.6) return "&e";
-        if (multiplier >= 0.35) return "&6";
+    public static String priceColor(double mult) {
+        if (mult >= 0.9) return "&a";
+        if (mult >= 0.6) return "&e";
+        if (mult >= 0.35) return "&6";
         return "&c";
     }
 
-    /**
-     * Builds a 10-character visual bar representing the price level.
-     *
-     * @param multiplier current multiplier
-     * @param minMult    minimum possible multiplier
-     * @param maxMult    maximum possible multiplier (typically 1.0)
-     * @return bar string with & color codes
-     */
+    /** 10-character visual bar for price level. */
     @NotNull
-    public static String multiplierBar(double multiplier, double minMult, double maxMult) {
-        final int barLength = 10;
-        double normalized = (multiplier - minMult) / Math.max(0.001, maxMult - minMult);
-        int filled = (int) Math.round(Math.min(1.0, Math.max(0.0, normalized)) * barLength);
+    public static String bar(double mult, double minMult, double maxMult) {
+        final int LEN = 10;
+        double norm   = (mult - minMult) / Math.max(0.001, maxMult - minMult);
+        int filled    = (int) Math.round(Math.min(1.0, Math.max(0.0, norm)) * LEN);
+        return priceColor(mult) + "█".repeat(filled) + "&8" + "█".repeat(LEN - filled);
+    }
 
-        String color = priceColor(multiplier);
-        return color + "█".repeat(filled) + "&8" + "█".repeat(barLength - filled);
+    // ── Legacy aliases (kept for backward compat with old callers) ────────────
+
+    /** @deprecated Use {@link #item(Material, String, List)} */
+    @Deprecated
+    @NotNull
+    public static ItemStack buildItem(@NotNull Material mat, @NotNull String name,
+                                       @Nullable List<String> lore) {
+        return item(mat, name, lore);
+    }
+
+    /** @deprecated Use {@link #item(Material, String)} */
+    @Deprecated
+    @NotNull
+    public static ItemStack buildItem(@NotNull Material mat, @NotNull String name) {
+        return item(mat, name);
+    }
+
+    /** @deprecated Use {@link #filler(Material)} */
+    @Deprecated
+    @NotNull
+    public static ItemStack buildFiller(@NotNull Material mat) {
+        return filler(mat);
+    }
+
+    /** @deprecated Use {@link #color(String)} */
+    @Deprecated
+    @NotNull
+    public static String colorize(@NotNull String s) {
+        return color(s);
+    }
+
+    /** @deprecated Use {@link #bar(double, double, double)} */
+    @Deprecated
+    @NotNull
+    public static String multiplierBar(double m, double min, double max) {
+        return bar(m, min, max);
     }
 }

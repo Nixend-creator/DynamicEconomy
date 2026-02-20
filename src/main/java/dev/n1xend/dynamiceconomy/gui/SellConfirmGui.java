@@ -16,26 +16,24 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Sell confirmation dialog — shows quantity, price preview, and market impact.
+ * Sell confirmation screen (3-row, 27 slots).
  *
- * <p>Layout (3-row, 27 slots):
  * <pre>
- * [filler] [filler] [filler] [filler] [filler] [filler] [filler] [filler] [filler]
- * [filler] [item]   [filler] [filler] [confirm] [filler] [cancel] [filler] [filler]
- * [filler] [filler] [filler] [filler] [filler]  [filler] [filler] [filler] [filler]
- * </pre></p>
+ * [f][f][f][f][f][f][f][f][f]   row 0
+ * [f][item][f][OK][f][X][f][f][f]  row 1  (slots 9-17)
+ * [f][f][f][f][f][f][f][f][f]   row 2
+ * </pre>
  *
  * @author n1xend
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.2.1
  */
-public class SellConfirmGui {
+public final class SellConfirmGui {
 
     public static final String TITLE_PREFIX = "§6Продажа: ";
 
-    private static final int SLOT_ITEM_PREVIEW = 11;
-    private static final int SLOT_CONFIRM = 13;
-    private static final int SLOT_CANCEL = 15;
+    static final int SLOT_PREVIEW = 11;
+    static final int SLOT_CONFIRM = 13;
+    static final int SLOT_CANCEL  = 15;
 
     private final DynamicEconomy plugin;
 
@@ -43,140 +41,106 @@ public class SellConfirmGui {
         this.plugin = plugin;
     }
 
-    /**
-     * Opens the sell confirmation screen for the given item and sell mode.
-     *
-     * <p>Automatically calculates how many items will be sold based on mode
-     * and what the player has in their inventory.</p>
-     *
-     * @param player     the selling player
-     * @param materialId material to sell
-     * @param mode       sell mode (ALL / STACK / ONE)
-     */
-    public void open(@NotNull Player player, @NotNull String materialId, @NotNull GuiStateStore.SellMode mode) {
+    public void open(@NotNull Player player, @NotNull String materialId,
+                     @NotNull GuiStateStore.SellMode mode) {
         MarketItem item = plugin.getEconomyService().getItem(materialId);
-        if (item == null) {
-            return;
-        }
+        if (item == null) return;
 
-        int inInventory = countInInventory(player, item.getMaterial());
-        if (inInventory <= 0) {
+        int inInv  = countInInventory(player, item.getMaterial());
+        if (inInv <= 0) {
             player.sendMessage(plugin.getMessageManager().prefixed("sell.no-items",
-                "%item%", item.getDisplayName()));
+                    "%item%", item.getDisplayName()));
             return;
         }
 
-        int toSell = switch (mode) {
-            case ALL -> inInventory;
-            case STACK -> Math.min(64, inInventory);
-            case ONE -> 1;
+        int maxSell = plugin.getLicenseService().getMaxSellAmount(player);
+        int toSell  = switch (mode) {
+            case ALL   -> Math.min(inInv, maxSell);
+            case STACK -> Math.min(64,   inInv);
+            case ONE   -> 1;
         };
-        toSell = Math.min(toSell, plugin.getConfigManager().getMaxSellAmount());
 
-        MarketCategory category = plugin.getEconomyService().getCategory(item.getCategoryId());
-        double seasonalMult = (category != null) ? category.getSeasonalMultiplier() : 1.0;
+        MarketCategory cat = plugin.getEconomyService().getCategory(item.getCategoryId());
+        double seasonal    = cat != null ? cat.getSeasonalMultiplier() : 1.0;
+        double preview     = plugin.getEconomyService().getPriceCalculator()
+                .calculatePreviewPayout(item, toSell, seasonal);
+        double multAfter   = plugin.getEconomyService().getPriceCalculator()
+                .previewMultiplierAfterSale(item, toSell);
 
-        double previewPayout = plugin.getEconomyService().getPriceCalculator()
-            .calculatePreviewPayout(item, toSell, seasonalMult);
-        double multAfter = plugin.getEconomyService().getPriceCalculator()
-            .previewMultiplierAfterSale(item, toSell);
+        // Strip colour codes from item name for title (avoids Minecraft title glitches)
+        String cleanName   = item.getDisplayName().replaceAll("§.", "");
+        String title       = TITLE_PREFIX + toSell + "x " + cleanName;
 
-        String title = TITLE_PREFIX + toSell + "x " + item.getDisplayName();
-        Inventory inventory = Bukkit.createInventory(null, 27, title);
+        Inventory inv = Bukkit.createInventory(
+                new GuiHolder(GuiHolder.GuiType.SELL_CONFIRM, materialId), 27, title);
+        GUIHelper.fill(inv, GUIHelper.filler(plugin.getConfigManager().getGuiFiller()));
 
-        ItemStack filler = GUIHelper.buildFiller(plugin.getConfigManager().getGuiFiller());
-        GUIHelper.fill(inventory, filler);
+        inv.setItem(SLOT_PREVIEW, buildPreview(item, toSell, preview,
+                item.getCurrentMultiplier(), multAfter, seasonal));
+        inv.setItem(SLOT_CONFIRM, buildConfirm(toSell, preview, item.getDisplayName()));
+        inv.setItem(SLOT_CANCEL,  GUIHelper.item(Material.RED_STAINED_GLASS_PANE,
+                plugin.getMessageManager().get("gui.confirm.cancel-button"),
+                List.of(GUIHelper.color("&7Вернуться в категорию"))));
 
-        inventory.setItem(SLOT_ITEM_PREVIEW,
-            buildPreviewItem(item, toSell, previewPayout, item.getCurrentMultiplier(), multAfter, seasonalMult));
-        inventory.setItem(SLOT_CONFIRM, buildConfirmButton(toSell, previewPayout, item.getDisplayName()));
-        inventory.setItem(SLOT_CANCEL, GUIHelper.buildItem(Material.RED_STAINED_GLASS_PANE,
-            plugin.getMessageManager().get("gui.confirm.cancel-button"),
-            List.of(GUIHelper.colorize("&7Вернуться в категорию"))));
-
-        // Store pending sell data
+        // Store state for listener
         UUID uuid = player.getUniqueId();
-        GuiStateStore.setSellItem(uuid, materialId);
-        GuiStateStore.setSellAmount(uuid, toSell);
-        GuiStateStore.setSellMode(uuid, mode);
+        plugin.getGuiStateStore().setSellItem(uuid, materialId);
+        plugin.getGuiStateStore().setSellAmount(uuid, toSell);
+        plugin.getGuiStateStore().setSellMode(uuid, mode);
 
-        player.openInventory(inventory);
+        player.openInventory(inv);
     }
 
-    // -------------------------------------------------------------------------
-    // Private builders
-    // -------------------------------------------------------------------------
+    // ── Builders ──────────────────────────────────────────────────────────────
 
-    private ItemStack buildPreviewItem(@NotNull MarketItem item, int amount, double payout,
-                                        double multBefore, double multAfter, double seasonalMult) {
-        double perUnit = payout / amount;
-        double taxRate = plugin.getEconomyService().getPriceCalculator().getSellTaxRate();
-        double taxAmount = item.getCurrentPrice() * seasonalMult * amount * taxRate;
+    private ItemStack buildPreview(@NotNull MarketItem item, int amount, double payout,
+                                    double multBefore, double multAfter, double seasonal) {
+        double perUnit   = payout / amount;
+        double tax       = plugin.getEconomyService().getPriceCalculator().getSellTaxRate();
+        double taxAmount = item.getCurrentPrice() * seasonal * amount * tax;
 
         List<String> lore = new ArrayList<>();
-        lore.add(GUIHelper.colorize("&8▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"));
-        lore.add(plugin.getMessageManager().get("gui.confirm.selling",
-            "%amount%", amount, "%item%", item.getDisplayName()));
-        lore.add(plugin.getMessageManager().get("gui.confirm.per-unit",
-            "%price%", GUIHelper.formatPrice(perUnit)));
-
-        if (seasonalMult > 1.0) {
-            int bonusPct = (int) ((seasonalMult - 1.0) * 100);
-            lore.add(GUIHelper.colorize("&6🔥 Сезонный бонус: &e+" + bonusPct + "%"));
-        }
-
-        lore.add(plugin.getMessageManager().get("gui.confirm.tax",
-            "%tax%", (int) (taxRate * 100), "%amount%", GUIHelper.formatPrice(taxAmount)));
+        lore.add(GUIHelper.color("&8▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"));
+        lore.add(GUIHelper.color("&7Продаёте: &f" + amount + "x " + item.getDisplayName()));
+        lore.add(GUIHelper.color("&7Цена/шт:  &a" + GUIHelper.formatPrice(perUnit)));
+        if (seasonal > 1.0)
+            lore.add(GUIHelper.color("&6🔥 Сезонный бонус: +"
+                    + (int)((seasonal-1)*100) + "%"));
+        lore.add(GUIHelper.color("&7Налог (" + (int)(tax*100) + "%): &c-"
+                + GUIHelper.formatPrice(taxAmount)));
         lore.add("");
-        lore.add(plugin.getMessageManager().get("gui.confirm.payout",
-            "%payout%", GUIHelper.formatPrice(payout)));
+        lore.add(GUIHelper.color("&7Получите: &a&l" + GUIHelper.formatPrice(payout)));
         lore.add("");
-        lore.add(plugin.getMessageManager().get("gui.confirm.impact-before",
-            "%color%", GUIHelper.colorize(GUIHelper.priceColor(multBefore)),
-            "%percent%", String.format("%.0f%%", multBefore * 100)));
-        lore.add(plugin.getMessageManager().get("gui.confirm.impact-after",
-            "%color%", GUIHelper.colorize(GUIHelper.priceColor(multAfter)),
-            "%percent%", String.format("%.0f%%", multAfter * 100)));
+        lore.add(GUIHelper.color("&7Цена до:    " + GUIHelper.priceColor(multBefore)
+                + String.format("%.0f%%", multBefore*100)));
+        lore.add(GUIHelper.color("&7Цена после: " + GUIHelper.priceColor(multAfter)
+                + String.format("%.0f%%", multAfter*100)));
 
-        return GUIHelper.buildItem(item.getMaterial(),
-            GUIHelper.colorize("&f" + item.getDisplayName() + " &7×" + amount), lore);
+        return GUIHelper.item(item.getMaterial(),
+                GUIHelper.color("&f" + item.getDisplayName() + " &7×" + amount), lore);
     }
 
-    private ItemStack buildConfirmButton(int amount, double payout, String itemName) {
+    private ItemStack buildConfirm(int amount, double payout, String name) {
         List<String> lore = new ArrayList<>();
-        lore.add(plugin.getMessageManager().get("gui.confirm.selling",
-            "%amount%", amount, "%item%", itemName));
-        lore.add(GUIHelper.colorize("&aПолучите: &6" + GUIHelper.formatPrice(payout)));
+        lore.add(GUIHelper.color("&7" + amount + "x " + name));
+        lore.add(GUIHelper.color("&aПолучите: &6" + GUIHelper.formatPrice(payout)));
         lore.add("");
-        lore.add(GUIHelper.colorize("&eНажмите для подтверждения"));
-
-        return GUIHelper.buildItem(Material.LIME_STAINED_GLASS_PANE,
-            plugin.getMessageManager().get("gui.confirm.confirm-button"), lore);
+        lore.add(GUIHelper.color("&eНажмите для подтверждения"));
+        return GUIHelper.item(Material.LIME_STAINED_GLASS_PANE,
+                plugin.getMessageManager().get("gui.confirm.confirm-button"), lore);
     }
 
-    // -------------------------------------------------------------------------
-    // Slot constants for listener
-    // -------------------------------------------------------------------------
+    // ── Static accessors ──────────────────────────────────────────────────────
 
-    public static int getConfirmSlot() {
-        return SLOT_CONFIRM;
-    }
+    public static int getConfirmSlot() { return SLOT_CONFIRM; }
+    public static int getCancelSlot()  { return SLOT_CANCEL;  }
 
-    public static int getCancelSlot() {
-        return SLOT_CANCEL;
-    }
+    // ── Utility ───────────────────────────────────────────────────────────────
 
-    // -------------------------------------------------------------------------
-    // Private util
-    // -------------------------------------------------------------------------
-
-    private int countInInventory(@NotNull Player player, @NotNull Material material) {
-        int count = 0;
-        for (var stack : player.getInventory().getContents()) {
-            if (stack != null && stack.getType() == material) {
-                count += stack.getAmount();
-            }
-        }
-        return count;
+    private int countInInventory(@NotNull Player p, @NotNull Material mat) {
+        int n = 0;
+        for (var s : p.getInventory().getContents())
+            if (s != null && s.getType() == mat) n += s.getAmount();
+        return n;
     }
 }

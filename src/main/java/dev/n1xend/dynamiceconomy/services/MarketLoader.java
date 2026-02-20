@@ -10,127 +10,152 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
- * Loads market categories and items from items.yml.
+ * Loads market categories and items from {@code items.yml}.
  *
- * <p>Separated from EconomyService to follow single-responsibility principle.
- * This class is stateless after construction and used once at startup.</p>
+ * <p>On every startup the bundled {@code items.yml} version is compared to the
+ * on-disk version. If the bundled version is higher (or the file is missing),
+ * the file is overwritten so new items always appear after a plugin update.</p>
  *
  * @author n1xend
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.2.1
  */
-public class MarketLoader {
+public final class MarketLoader {
+
+    private static final String ITEMS_FILE    = "items.yml";
+    private static final String VERSION_KEY   = "config-version";
 
     private final DynamicEconomy plugin;
-    private final Logger logger;
+    private final Logger         logger;
 
     public MarketLoader(@NotNull DynamicEconomy plugin) {
-        this.plugin = plugin;
+        this.plugin = Objects.requireNonNull(plugin);
         this.logger = plugin.getLogger();
     }
 
-    // -------------------------------------------------------------------------
-    // Public
-    // -------------------------------------------------------------------------
+    // ── Public API ────────────────────────────────────────────────────────────
 
-    /**
-     * Loads all categories and their items from items.yml.
-     *
-     * @return ordered map of categoryId → MarketCategory
-     */
     @NotNull
     public Map<String, MarketCategory> loadCategories() {
-        plugin.saveResource("items.yml", false);
+        ensureItemsFileUpToDate();
 
-        File itemsFile = new File(plugin.getDataFolder(), "items.yml");
-        FileConfiguration itemsConfig = YamlConfiguration.loadConfiguration(itemsFile);
+        File itemsFile = new File(plugin.getDataFolder(), ITEMS_FILE);
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(itemsFile);
 
         Map<String, MarketCategory> categories = new LinkedHashMap<>();
-
-        ConfigurationSection categoriesSection = itemsConfig.getConfigurationSection("categories");
-        if (categoriesSection == null) {
-            logger.warning("No categories section found in items.yml!");
+        ConfigurationSection catSection = cfg.getConfigurationSection("categories");
+        if (catSection == null) {
+            logger.warning("No 'categories' section found in items.yml — shop will be empty!");
             return categories;
         }
 
-        for (String categoryId : categoriesSection.getKeys(false)) {
-            ConfigurationSection catSection = categoriesSection.getConfigurationSection(categoryId);
-            if (catSection == null) {
+        int loaded  = 0;
+        int skipped = 0;
+        for (String catId : catSection.getKeys(false)) {
+            ConfigurationSection sec = catSection.getConfigurationSection(catId);
+            if (sec == null) continue;
+
+            if (!sec.getBoolean("enabled", true)) {
+                skipped++;
+                logger.info("Category '" + catId + "' disabled — skipping.");
                 continue;
             }
 
-            MarketCategory category = parseCategory(categoryId, catSection);
-            if (category == null) {
-                continue;
-            }
+            MarketCategory cat = parseCategory(catId, sec);
+            if (cat == null) continue;
 
-            loadItemsIntoCategory(category, catSection);
-            categories.put(categoryId, category);
-
-            logger.info("Loaded category '" + categoryId + "' with " + category.getItems().size() + " items.");
+            loadItems(cat, sec);
+            categories.put(catId, cat);
+            loaded++;
+            logger.info("Loaded category '" + catId + "' — " + cat.getItems().size() + " items.");
         }
 
+        if (skipped > 0)
+            logger.info(skipped + " categor" + (skipped == 1 ? "y" : "ies") + " disabled.");
+        logger.info("Total categories loaded: " + loaded);
         return categories;
     }
 
-    // -------------------------------------------------------------------------
-    // Private parsing
-    // -------------------------------------------------------------------------
+    // ── File versioning ───────────────────────────────────────────────────────
 
-    private MarketCategory parseCategory(String categoryId, ConfigurationSection section) {
-        String displayName = section.getString("display-name", categoryId);
-        String description = section.getString("description", "");
-        String iconName = section.getString("icon", "CHEST");
-        int slot = section.getInt("slot", 10);
+    /**
+     * Copies bundled items.yml to disk if missing or outdated.
+     * Version is read from the {@code config-version} key.
+     */
+    private void ensureItemsFileUpToDate() {
+        File diskFile = new File(plugin.getDataFolder(), ITEMS_FILE);
 
-        Material icon = parseMaterial(iconName, "icon for category " + categoryId);
-        if (icon == null) {
-            return null;
-        }
+        int bundledVersion = getBundledVersion();
+        int diskVersion    = getDiskVersion(diskFile);
 
-        // Translate color codes from display-name stored in yml
-        displayName = displayName.replace("&", "§");
-        description = description.replace("&", "§");
-
-        return new MarketCategory(categoryId, displayName, description, icon, slot);
-    }
-
-    private void loadItemsIntoCategory(MarketCategory category, ConfigurationSection catSection) {
-        ConfigurationSection itemsSection = catSection.getConfigurationSection("items");
-        if (itemsSection == null) {
-            return;
-        }
-
-        for (String materialName : itemsSection.getKeys(false)) {
-            ConfigurationSection itemSection = itemsSection.getConfigurationSection(materialName);
-            if (itemSection == null) {
-                continue;
-            }
-
-            Material material = parseMaterial(materialName, "item " + materialName);
-            if (material == null) {
-                continue;
-            }
-
-            String displayName = itemSection.getString("display-name", materialName);
-            displayName = displayName.replace("&", "§");
-            double basePrice = itemSection.getDouble("base-price", 1.0);
-
-            MarketItem item = new MarketItem(materialName, category.getId(), displayName, material, basePrice);
-            category.addItem(item);
+        if (!diskFile.exists() || diskVersion < bundledVersion) {
+            logger.info("Updating " + ITEMS_FILE
+                    + " (disk v" + diskVersion + " → bundled v" + bundledVersion + ")");
+            plugin.saveResource(ITEMS_FILE, /* replace= */ true);
         }
     }
 
-    private Material parseMaterial(String name, String context) {
-        Material mat = Material.matchMaterial(name);
-        if (mat == null) {
-            logger.warning("Unknown material '" + name + "' for " + context + " — skipping.");
+    private int getBundledVersion() {
+        InputStream is = plugin.getResource(ITEMS_FILE);
+        if (is == null) return 0;
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(
+                new InputStreamReader(is, StandardCharsets.UTF_8));
+        return cfg.getInt(VERSION_KEY, 0);
+    }
+
+    private int getDiskVersion(@NotNull File file) {
+        if (!file.exists()) return -1;
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+        return cfg.getInt(VERSION_KEY, 0);
+    }
+
+    // ── Parsing ───────────────────────────────────────────────────────────────
+
+    private MarketCategory parseCategory(@NotNull String id,
+                                          @NotNull ConfigurationSection sec) {
+        String rawName = sec.getString("display-name", id);
+        String desc    = sec.getString("description", "");
+        String iconStr = sec.getString("icon", "CHEST");
+        int    slot    = sec.getInt("slot", 10);
+
+        Material icon = parseMaterial(iconStr, "icon for category " + id);
+        if (icon == null) return null;
+
+        return new MarketCategory(id,
+                rawName.replace("&", "§"),
+                desc.replace("&", "§"),
+                icon, slot, true);
+    }
+
+    private void loadItems(@NotNull MarketCategory cat,
+                            @NotNull ConfigurationSection catSec) {
+        ConfigurationSection items = catSec.getConfigurationSection("items");
+        if (items == null) return;
+
+        for (String matName : items.getKeys(false)) {
+            ConfigurationSection iSec = items.getConfigurationSection(matName);
+            if (iSec == null) continue;
+
+            Material mat = parseMaterial(matName, "item " + matName + " in " + cat.getId());
+            if (mat == null) continue;
+
+            String name  = iSec.getString("display-name", matName).replace("&", "§");
+            double price = iSec.getDouble("base-price", 1.0);
+            cat.addItem(new MarketItem(matName, cat.getId(), name, mat, price));
         }
-        return mat;
+    }
+
+    private Material parseMaterial(@NotNull String name, @NotNull String ctx) {
+        Material m = Material.matchMaterial(name);
+        if (m == null) logger.warning("Unknown material '" + name + "' for " + ctx + " — skipping.");
+        return m;
     }
 }
